@@ -3,4 +3,4 @@
 
 
 # Nedaire
-[Nedaire] () is big mod Techno Magic mod for Minecraft with a focus on perfomance and really interesting content
+[Nedaire] () is big mod Techno Magic mod for Minecraft with a focus on performance and automation
