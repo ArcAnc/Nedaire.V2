@@ -30,9 +30,7 @@ public class Nedaire
     {
         modEventBus.addListener(this::commonSetup);
 
-        NRegistration.NBlocks.BLOCKS.register(modEventBus);
-        NRegistration.NItems.ITEMS.register(modEventBus);
-        NRegistration.NCreativeTabs.CREATIVE_MODE_TABS.register(modEventBus);
+        NRegistration.init(modEventBus);
 
         modEventBus.addListener(NCapabilities :: registerCapabilities);
     }

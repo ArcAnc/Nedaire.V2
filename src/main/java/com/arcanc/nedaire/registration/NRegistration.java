@@ -13,23 +13,33 @@ import com.arcanc.nedaire.content.block.NBlockBase;
 import com.arcanc.nedaire.content.items.ItemInterfaces;
 import com.arcanc.nedaire.content.items.NBaseBlockItem;
 import com.arcanc.nedaire.util.NDatabase;
+import com.arcanc.nedaire.util.helpers.BlockHelper;
+import com.google.common.collect.ImmutableList;
 import net.minecraft.Util;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.CrossCollisionBlock;
+import net.minecraft.world.level.block.HopperBlock;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.Property;
+import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -37,6 +47,15 @@ import java.util.function.Supplier;
 
 public class NRegistration
 {
+    public static void init(final IEventBus modEventBus)
+    {
+        NRegistration.NBlocks.init(modEventBus);
+        NRegistration.NItems.init(modEventBus);
+        NRegistration.NCreativeTabs.init(modEventBus);
+        //custom registries
+        NRegistration.NMultiblocks.init(modEventBus);
+    }
+
     public static class NBlocks
     {
         public static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(NDatabase.MOD_ID);
@@ -75,7 +94,7 @@ public class NRegistration
             }
 
             @Override
-            public @NotNull Item asItem()
+            public @Nonnull Item asItem()
             {
                 return itemBlock.get();
             }
@@ -105,8 +124,13 @@ public class NRegistration
             {
                 return get().defaultBlockState();
             }
+
         }
 
+        public static void init(IEventBus modEventBus)
+        {
+            BLOCKS.register(modEventBus);
+        }
     }
 
     public static class NItems
@@ -116,7 +140,7 @@ public class NRegistration
         protected static final Supplier<Item.Properties> baseProps = Item.Properties::new;
 
         @SuppressWarnings("deprecation")
-        public static @NotNull Supplier<Item.Properties> copyProps(@NotNull Item itemBlock)
+        public static @Nonnull Supplier<Item.Properties> copyProps(@Nonnull Item itemBlock)
         {
             ItemStack stack = itemBlock.getDefaultInstance();
             Item.Properties p = new Item.Properties().
@@ -134,6 +158,11 @@ public class NRegistration
             if (stack.get(DataComponents.ATTRIBUTE_MODIFIERS) != null)
                 p.attributes(stack.get(DataComponents.ATTRIBUTE_MODIFIERS));
             return () -> p;
+        }
+
+        public static void init(final IEventBus modEventBus)
+        {
+            ITEMS.register(modEventBus);
         }
     }
 
@@ -157,6 +186,72 @@ public class NRegistration
                 if(item instanceof ItemInterfaces.IMustAddToCreativeTab i && i.addSelfToCreativeTab()){
                     output.accept(item);
                 }
+            }
+        }
+
+        public static void init(final IEventBus modEventBus)
+        {
+            CREATIVE_MODE_TABS.register(modEventBus);
+        }
+    }
+
+    public static final class NMultiblocks
+    {
+        public static void init(final IEventBus bus)
+        {
+            Preprocessors.register();
+            Matchers.register();
+        }
+        public static final class Matchers
+        {
+            public static void register()
+            {
+                BlockHelper.BlockMatcher.addPredicate((expected, found, world, pos) -> expected == found);
+
+                List<TagKey<Block>> genericTags = new ArrayList<>();
+                /*FIXME: fill tags list, which may be used for checks*/
+                BlockHelper.BlockMatcher.addPredicate((expected, found, world, pos) -> {
+                    if(expected.getBlock()!=found.getBlock())
+                        for(TagKey<Block> t : genericTags)
+                            if(expected.is(t)&&found.is(t))
+                                return true;
+                    return false;
+                });
+            }
+        }
+
+        public static final class Preprocessors
+        {
+            public static void register()
+            {
+                //FourWayBlock (fences etc): ignore all connections
+                List<Property<Boolean>> sideProperties = ImmutableList.of(
+                        CrossCollisionBlock.NORTH, CrossCollisionBlock.EAST, CrossCollisionBlock.SOUTH, CrossCollisionBlock.WEST
+                );
+                BlockHelper.BlockMatcher.addPreprocessor((expected, found, world, pos) -> {
+                    if(expected.getBlock() instanceof CrossCollisionBlock &&expected.getBlock()==found.getBlock())
+                        for(Property<Boolean> side : sideProperties)
+                            if(!expected.getValue(side))
+                                found = found.setValue(side, false);
+                    return found;
+                });
+
+                //Ignore hopper facing
+                BlockHelper.BlockMatcher.addPreprocessor((expected, found, world, pos) -> {
+                    if(expected.getBlock()== Blocks.HOPPER&&found.getBlock()==Blocks.HOPPER)
+                        return found.setValue(HopperBlock.FACING, expected.getValue(HopperBlock.FACING));
+                    return found;
+                });
+
+                //Allow multiblocks to be formed underwater
+                BlockHelper.BlockMatcher.addPreprocessor((expected, found, world, pos) -> {
+                    // Un-waterlog if the expected state is dry, but the found one is not
+                    if(expected.hasProperty(BlockHelper.BlockProperties.WATERLOGGED)&&found.hasProperty(BlockHelper.BlockProperties.WATERLOGGED)
+                            &&!expected.getValue(BlockHelper.BlockProperties.WATERLOGGED)&&found.getValue(BlockHelper.BlockProperties.WATERLOGGED))
+                        return found.setValue(BlockHelper.BlockProperties.WATERLOGGED, false);
+                    else
+                        return found;
+                });
             }
         }
     }

@@ -7,17 +7,17 @@
  * Details can be found in the license file in the root folder of this project
  */
 
-package com.arcanc.nedaire.content.capabilities.crystal_power;
+package com.arcanc.nedaire.content.capabilities.energon;
 
-public interface ICrystalPower
+public interface IEnergon
 {
-    float getCP();
-    float getCPMax();
-    void setCP(float amount);
+    float getEnergy();
+    float getEnergyMax();
+    void setEnergy(float amount);
 
-    float addCP(float add, boolean simulate);
+    float addEnergy(float add, boolean simulate);
 
-    float extractCP(float extract, boolean simulate);
+    float extractEnergy(float extract, boolean simulate);
 
     boolean canExtract();
     boolean canInsert();
