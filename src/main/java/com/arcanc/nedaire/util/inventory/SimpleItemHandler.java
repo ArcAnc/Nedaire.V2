@@ -74,14 +74,20 @@ public class SimpleItemHandler implements IItemHandler, INBTSerializable<Compoun
     public @NotNull ItemStack insertItem(int slot, @NotNull ItemStack stack, boolean simulate)
     {
         validateSlotIndex(slot);
-        return this.slots.get(slot).insertItem(stack, simulate);
+        ItemStack ret = this.slots.get(slot).insertItem(stack, simulate);
+        if (callback != null)
+            callback.onInventoryChanged(slot);
+        return ret;
     }
 
     @Override
     public @NotNull ItemStack extractItem(int slot, int amount, boolean simulate)
     {
         validateSlotIndex(slot);
-        return this.slots.get(0).extractItem(amount, simulate);
+        ItemStack ret = this.slots.get(slot).extractItem(amount, simulate);
+        if (callback != null)
+            callback.onInventoryChanged(slot);
+        return ret;
     }
 
     @Override
@@ -130,6 +136,8 @@ public class SimpleItemHandler implements IItemHandler, INBTSerializable<Compoun
             if (slot >= 0 && slot < this.slots.size())
             {
                 this.slots.get(slot).deserializeNBT(provider, itemTag);
+                if (callback != null)
+                    callback.onInventoryChanged(slot);
             }
         }
     }
