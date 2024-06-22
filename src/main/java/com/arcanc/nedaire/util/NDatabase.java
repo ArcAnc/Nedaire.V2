@@ -10,7 +10,6 @@
 package com.arcanc.nedaire.util;
 
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.inventory.Slot;
 
 import java.util.function.Function;
 
@@ -51,10 +50,12 @@ public class NDatabase
 
         public static final class InventoryInfo
         {
+            public static final String CAPABILITY_NAME = "item_handler";
+
             public static final String ITEMS = "items";
             public static final String SLOT = "slot";
 
-            public static final class ItemStackHolder
+            public static final class ItemStackHolderInfo
             {
                 public static final String ITEM = "item";
                 public static final String CAPACITY = "capacity";

@@ -1,0 +1,119 @@
+/**
+ * @author ArcAnc
+ * Created at: 22.06.2024
+ * Copyright (c) 2024
+ * <p>
+ * This code is licensed under "Arc's License of Common Sense"
+ * Details can be found in the license file in the root folder of this project
+ */
+
+package com.arcanc.nedaire.content.block.block_entity;
+
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.Connection;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.SkullBlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import org.jetbrains.annotations.NotNull;
+
+public abstract class NBaseBlockEntity extends SkullBlockEntity
+{
+    public NBaseBlockEntity(BlockPos pPos, BlockState pBlockState) {
+        super(pPos, pBlockState);
+    }
+
+    @Override
+    protected void loadAdditional(@NotNull CompoundTag pTag, HolderLookup.@NotNull Provider pRegistries)
+    {
+        super.loadAdditional(pTag, pRegistries);
+
+        this.readCustomTag(pTag, false);
+    }
+
+    public abstract void readCustomTag(@NotNull CompoundTag tag, boolean descrPacket);
+
+    @Override
+    protected void saveAdditional(@NotNull CompoundTag pTag, HolderLookup.@NotNull Provider pRegistries)
+    {
+        super.saveAdditional(pTag, pRegistries);
+        this.writeCustomTag(pTag, false);
+    }
+
+    public abstract void writeCustomTag(@NotNull CompoundTag pTag, boolean descrPacker);
+
+    @Override
+    public ClientboundBlockEntityDataPacket getUpdatePacket()
+    {
+        return ClientboundBlockEntityDataPacket.create(this, (blockEntity, registryAccess) ->
+        {
+           CompoundTag tag = new CompoundTag();
+           this.writeCustomTag(tag, true);
+           return tag;
+        });
+    }
+
+    @Override
+    public void onDataPacket(@NotNull Connection net, @NotNull ClientboundBlockEntityDataPacket pkt, HolderLookup.@NotNull Provider lookupProvider)
+    {
+        CompoundTag nonNullTag = pkt.getTag();
+        this.readCustomTag(nonNullTag, true);
+    }
+
+    @Override
+    public void handleUpdateTag(@NotNull CompoundTag tag, HolderLookup.@NotNull Provider lookupProvider)
+    {
+        this.readCustomTag(tag, true);
+    }
+
+    @Override
+    public @NotNull CompoundTag getUpdateTag(HolderLookup.@NotNull Provider pRegistries)
+    {
+        CompoundTag tag = super.getUpdateTag(pRegistries);
+        writeCustomTag(tag, true);
+        return tag;
+    }
+
+    public void handlePacketFromClient(CompoundTag tag)
+    {
+
+    }
+
+    public void handlePacketFromServer(CompoundTag tag)
+    {
+
+    }
+
+    /**
+     * Most calls to {@link BlockEntity#setChanged} should be replaced by this. The vanilla mD also updates comparator
+     * states and re-caches the block state, while in most cases we just want to say "this needs to be saved to disk"
+     */
+    @SuppressWarnings("deprecation")
+    protected void markDirty()
+    {
+        if (this.level != null && this.level.hasChunkAt(getBlockPos()))
+        {
+            level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), Block.UPDATE_CLIENTS);
+            this.level.getChunkAt(getBlockPos()).setUnsaved(true);
+        }
+    }
+
+    /**
+     *  Based on the super version, but works around a Forge patch to World#markChunkDirty causing duplicate comparator
+     * updates and only performs comparator updates if this TE actually has comparator behavior
+     */
+    @Override
+    public void setChanged()
+    {
+        if(this.level != null)
+        {
+            markDirty();
+            BlockState state = getBlockState();
+            if(state.hasAnalogOutputSignal())
+                this.level.updateNeighbourForOutputSignal(this.worldPosition, state.getBlock());
+        }
+    }
+}

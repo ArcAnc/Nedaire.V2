@@ -146,18 +146,18 @@ public class ItemStackHolder
     {
         CompoundTag tag = new CompoundTag();
 
-        tag.put(NDatabase.CapabilitiesInfo.InventoryInfo.ItemStackHolder.ITEM, this.stack.save(provider));
-        tag.putInt(NDatabase.CapabilitiesInfo.InventoryInfo.ItemStackHolder.CAPACITY, this.capacity);
-        tag.putInt(NDatabase.CapabilitiesInfo.InventoryInfo.ItemStackHolder.SLOT_TYPE, this.slotType.ordinal());
+        tag.put(NDatabase.CapabilitiesInfo.InventoryInfo.ItemStackHolderInfo.ITEM, this.stack.save(provider));
+        tag.putInt(NDatabase.CapabilitiesInfo.InventoryInfo.ItemStackHolderInfo.CAPACITY, this.capacity);
+        tag.putInt(NDatabase.CapabilitiesInfo.InventoryInfo.ItemStackHolderInfo.SLOT_TYPE, this.slotType.ordinal());
 
         return tag;
     }
 
     public void deserializeNBT(HolderLookup.Provider provider, @NotNull CompoundTag tag)
     {
-        ItemStack.parse(provider, tag.get(NDatabase.CapabilitiesInfo.InventoryInfo.ItemStackHolder.ITEM)).ifPresent(this :: setStack);
-        this.capacity = tag.getInt(NDatabase.CapabilitiesInfo.InventoryInfo.ItemStackHolder.CAPACITY);
-        this.slotType = SlotType.values()[tag.getInt(NDatabase.CapabilitiesInfo.InventoryInfo.ItemStackHolder.SLOT_TYPE)];
+        ItemStack.parse(provider, tag.get(NDatabase.CapabilitiesInfo.InventoryInfo.ItemStackHolderInfo.ITEM)).ifPresent(this :: setStack);
+        this.capacity = tag.getInt(NDatabase.CapabilitiesInfo.InventoryInfo.ItemStackHolderInfo.CAPACITY);
+        this.slotType = SlotType.values()[tag.getInt(NDatabase.CapabilitiesInfo.InventoryInfo.ItemStackHolderInfo.SLOT_TYPE)];
     }
 
     public void update()
@@ -259,7 +259,7 @@ public class ItemStackHolder
         }
 
         @Override
-        public Builder setValidator(Predicate<ItemStack> validator)
+        public ExtBuilder<T> setValidator(Predicate<ItemStack> validator)
         {
             super.setValidator(validator);
             return this;

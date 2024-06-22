@@ -11,12 +11,13 @@ package com.arcanc.nedaire.content.capabilities;
 
 import com.arcanc.nedaire.content.capabilities.energon.IEnergon;
 import com.arcanc.nedaire.util.NDatabase;
+import com.arcanc.nedaire.util.inventory.ItemCapabilityAccess;
 import net.minecraft.core.Direction;
-import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.capabilities.BlockCapability;
 import net.neoforged.neoforge.capabilities.EntityCapability;
 import net.neoforged.neoforge.capabilities.ItemCapability;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
+import net.neoforged.neoforge.items.IItemHandler;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -31,16 +32,35 @@ public class NCapabilities
         private Energon() {}
     }
 
+    public static final class ItemHandler
+    {
+        public static final BlockCapability<IItemHandler, @NotNull ItemCapabilityAccess> BLOCK = BlockCapability.create(NDatabase.modRL(NDatabase.CapabilitiesInfo.InventoryInfo.CAPABILITY_NAME), IItemHandler.class, ItemCapabilityAccess.class);
+    }
+
     public static void registerCapabilities(final @NotNull RegisterCapabilitiesEvent event)
     {
-        event.registerBlock(Energon.BLOCK,
-                (level, pos, state, blockEntity, context) -> level.getCapability(
-                        Energon.BLOCK,
+
+        /*event.registerBlockEntity(Energon.BLOCK,
+                /*FIXME: replace with normal BE type
+                BlockEntityType.SKULL,
+                (blockEntity, context) -> blockEntity instanceof NBaseBlockEntity be ? be.getCapability(context) : null);*/
+
+        /*event.registerBlock(ItemHandler.BLOCK,
+                (level, pos, state, blockEntity, context) -> level.getCapability(ItemHandler.BLOCK,
                         pos,
                         state,
                         blockEntity,
                         context),
-                /*FIXME: attach to normal blocks*/
+                /*FIXME: attach to normal blocks
                 Blocks.ACACIA_LOG);
+        event.registerBlock(Capabilities.ItemHandler.BLOCK,
+                (level, pos, state, blockEntity, context) -> level.getCapability(
+                        Capabilities.ItemHandler.BLOCK,
+                        pos,
+                        state,
+                        blockEntity,
+                        context),
+                /*FIXME: attach to normal blocks
+                Blocks.ACACIA_LOG);*/
     }
 }
