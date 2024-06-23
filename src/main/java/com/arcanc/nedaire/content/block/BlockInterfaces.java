@@ -9,10 +9,22 @@
 
 package com.arcanc.nedaire.content.block;
 
-import com.arcanc.nedaire.util.helpers.BlockHelper;
-import net.minecraft.world.InteractionResult;
-import net.minecraft.world.item.context.UseOnContext;
+import com.arcanc.nedaire.registration.NRegistration;
+import com.google.common.base.Preconditions;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.ItemInteractionResult;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.BlockHitResult;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -20,28 +32,49 @@ public class BlockInterfaces
 {
     public interface INWrencheble
     {
-        InteractionResult onUsed(@NotNull UseOnContext ctx);
+        ItemInteractionResult onUsed(@NotNull ItemStack pStack,
+                                     @NotNull BlockState pState,
+                                     @NotNull Level pLevel,
+                                     @NotNull BlockPos pPos,
+                                     @NotNull Player pPlayer,
+                                     @NotNull InteractionHand pHand,
+                                     @NotNull BlockHitResult pHitResult);
     }
 
-    public interface BlockStateProvider
+    public interface IColoredBlock
     {
-        BlockState getState();
+        boolean hasCustomColor();
 
-        void setState(BlockState newState);
+        int getRenderColor(BlockState state, @Nullable BlockGetter level, @Nullable BlockPos pos, int tintIndex);
     }
 
-    public interface IGeneralMultiblock extends BlockStateProvider
+    public interface INInteractionObject<T extends BlockEntity & INInteractionObject<T>> extends MenuProvider
     {
         @Nullable
-        IGeneralMultiblock master();
+        T getGuiMaster();
 
-        default boolean isDummy()
+        NRegistration.NMenuTypes.ArgContainer<? super T, ?> getContainerType();
+
+        boolean canUseGui(Player player);
+
+        default boolean isValid()
         {
-            BlockState state = getState();
-            if(state.hasProperty(BlockHelper.BlockProperties.MULTIBLOCK_SLAVE))
-                return state.getValue(BlockHelper.BlockProperties.MULTIBLOCK_SLAVE);
-            else
-                return true;
+            return getGuiMaster()!=null;
+        }
+
+        @Override
+        default AbstractContainerMenu createMenu(int id, @NotNull Inventory playerInventory, @NotNull Player playerEntity)
+        {
+            T master = getGuiMaster();
+            Preconditions.checkNotNull(master);
+            NRegistration.NMenuTypes.ArgContainer<? super T, ?> type = getContainerType();
+            return type.create(id, playerInventory, master);
+        }
+
+        @Override
+        default @NotNull Component getDisplayName()
+        {
+            return Component.empty();
         }
     }
 

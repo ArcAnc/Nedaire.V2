@@ -10,6 +10,7 @@
 package com.arcanc.nedaire.registration;
 
 import com.arcanc.nedaire.content.block.NBlockBase;
+import com.arcanc.nedaire.content.gui.container_menu.NContainerMenu;
 import com.arcanc.nedaire.content.items.ItemInterfaces;
 import com.arcanc.nedaire.content.items.NBaseBlockItem;
 import com.arcanc.nedaire.util.NDatabase;
@@ -22,6 +23,11 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
+import net.minecraft.world.MenuProvider;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -38,6 +44,7 @@ import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
@@ -47,16 +54,18 @@ import java.util.function.Supplier;
 
 public class NRegistration
 {
+
     public static void init(final IEventBus modEventBus)
     {
         NRegistration.NBlocks.init(modEventBus);
         NRegistration.NItems.init(modEventBus);
+        NRegistration.NMenuTypes.init(modEventBus);
         NRegistration.NCreativeTabs.init(modEventBus);
         //custom registries
         NRegistration.NMultiblocks.init(modEventBus);
     }
 
-    public static class NBlocks
+    public static final class NBlocks
     {
         public static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(NDatabase.MOD_ID);
 
@@ -133,7 +142,7 @@ public class NRegistration
         }
     }
 
-    public static class NItems
+    public static final class NItems
     {
         public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(NDatabase.MOD_ID);
 
@@ -163,6 +172,66 @@ public class NRegistration
         public static void init(final IEventBus modEventBus)
         {
             ITEMS.register(modEventBus);
+        }
+    }
+
+    public static final class NMenuTypes
+    {
+        public static final DeferredRegister<MenuType<?>> MENU_TYPES = DeferredRegister.create(BuiltInRegistries.MENU, NDatabase.MOD_ID);
+
+
+        public static class ArgContainer<T, C extends NContainerMenu>
+        {
+            private final DeferredHolder<MenuType<?>, MenuType<C>> type;
+            private final ArgContainerConstructor<T, C> factory;
+
+            private ArgContainer(DeferredHolder<MenuType<?>, MenuType<C>> type, ArgContainerConstructor<T, C> factory)
+            {
+                this.type = type;
+                this.factory = factory;
+            }
+
+            public C create(int windowId, Inventory playerInv, T tile)
+            {
+                return factory.construct(getType(), windowId, playerInv, tile);
+            }
+
+            public MenuProvider provide(T arg)
+            {
+                return new MenuProvider()
+                {
+                    @Nonnull
+                    @Override
+                    public Component getDisplayName()
+                    {
+                        return Component.empty();
+                    }
+
+                    @Nullable
+                    @Override
+                    public AbstractContainerMenu createMenu(
+                            int containerId, @Nonnull Inventory inventory, @Nonnull Player player
+                    )
+                    {
+                        return create(containerId, inventory, arg);
+                    }
+                };
+            }
+
+            public MenuType<C> getType()
+            {
+                return type.get();
+            }
+        }
+
+        public interface ArgContainerConstructor<T, C extends NContainerMenu>
+        {
+            C construct(MenuType<C> type, int windowId, Inventory inventoryPlayer, T te);
+        }
+
+        public static void init(final IEventBus modEventBus)
+        {
+            MENU_TYPES.register(modEventBus);
         }
     }
 
