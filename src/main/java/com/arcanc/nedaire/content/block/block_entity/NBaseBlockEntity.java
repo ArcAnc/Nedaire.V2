@@ -19,6 +19,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.SkullBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public abstract class NBaseBlockEntity extends SkullBlockEntity
 {
@@ -85,6 +86,21 @@ public abstract class NBaseBlockEntity extends SkullBlockEntity
     public void handlePacketFromServer(CompoundTag tag)
     {
 
+    }
+
+    public void markContainingBlockForUpdate(@Nullable BlockState newState)
+    {
+        if(this.level!=null)
+            markBlockForUpdate(getBlockPos(), newState);
+    }
+
+    public void markBlockForUpdate(BlockPos pos, @Nullable BlockState newState)
+    {
+        BlockState state = level.getBlockState(pos);
+        if(newState == null)
+            newState = state;
+        level.sendBlockUpdated(pos, state, newState, 3);
+        level.updateNeighborsAt(pos, newState.getBlock());
     }
 
     /**

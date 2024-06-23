@@ -11,6 +11,8 @@ package com.arcanc.nedaire;
 
 
 import com.arcanc.nedaire.content.capabilities.NCapabilities;
+import com.arcanc.nedaire.content.gui.container_menu.NContainerMenu;
+import com.arcanc.nedaire.content.gui.nerwork.messages.NetworkEngine;
 import com.arcanc.nedaire.registration.NRegistration;
 import com.arcanc.nedaire.util.NDatabase;
 import com.mojang.logging.LogUtils;
@@ -18,6 +20,7 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.neoforged.neoforge.common.NeoForge;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
@@ -33,6 +36,25 @@ public class Nedaire
         NRegistration.init(modEventBus);
 
         modEventBus.addListener(NCapabilities :: registerCapabilities);
+
+        setupEvents(modEventBus);
+    }
+
+    private void setupEvents(final IEventBus modEventBus)
+    {
+        registerNetwork(modEventBus);
+        registerContainerMenuEvents();
+    }
+
+    private void registerNetwork(final @NotNull IEventBus modEventBus)
+    {
+        modEventBus.addListener(NetworkEngine :: setupMessages);
+    }
+
+    private void registerContainerMenuEvents()
+    {
+        NeoForge.EVENT_BUS.addListener(NContainerMenu :: onContainerOpened);
+        NeoForge.EVENT_BUS.addListener(NContainerMenu :: onContainerClosed);
     }
 
     private void commonSetup(final FMLCommonSetupEvent event)
