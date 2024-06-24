@@ -24,10 +24,10 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public record MessageContainerData(List<Pair<Integer, GenericDataSerializers.DataPair<?>>> synced) implements IMessage
+public record S2CMessageContainerData(List<Pair<Integer, GenericDataSerializers.DataPair<?>>> synced) implements IMessage
 {
-    public static final CustomPacketPayload.Type<MessageContainerData> TYPE = new CustomPacketPayload.Type<>(NDatabase.modRL("message_container_data"));
-    public static final StreamCodec<RegistryFriendlyByteBuf, MessageContainerData> STREAM_CODEC = StreamCodec.composite(
+    public static final CustomPacketPayload.Type<S2CMessageContainerData> TYPE = new CustomPacketPayload.Type<>(NDatabase.modRL("message_container_data"));
+    public static final StreamCodec<RegistryFriendlyByteBuf, S2CMessageContainerData> STREAM_CODEC = StreamCodec.composite(
             StreamCodec.of(
                     (pBuffer, pValue) -> PacketHelper.writeList(pBuffer, pValue,
                         (pair, buf) ->
@@ -36,11 +36,11 @@ public record MessageContainerData(List<Pair<Integer, GenericDataSerializers.Dat
                             pair.getSecond().write(buf);
                         }),
                     pBuffer -> PacketHelper.readList(pBuffer, pb -> Pair.of(pb.readVarInt(), GenericDataSerializers.read(pb)))),
-            MessageContainerData :: synced,
-            MessageContainerData :: new
+            S2CMessageContainerData:: synced,
+            S2CMessageContainerData:: new
             );
 
-    public MessageContainerData(List<Pair<Integer, GenericDataSerializers.DataPair<?>>> synced)
+    public S2CMessageContainerData(List<Pair<Integer, GenericDataSerializers.DataPair<?>>> synced)
     {
         this.synced = synced;
     }
@@ -56,7 +56,7 @@ public record MessageContainerData(List<Pair<Integer, GenericDataSerializers.Dat
     }
 
     @Override
-    public @NotNull Type<MessageContainerData> type()
+    public @NotNull Type<S2CMessageContainerData> type()
     {
         return TYPE;
     }

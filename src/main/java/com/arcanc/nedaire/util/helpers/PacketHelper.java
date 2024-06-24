@@ -27,6 +27,7 @@ public class PacketHelper
             result.add(readElement.apply(buffer));
         return result;
     }
+
     public static <T> void writeList(@NotNull RegistryFriendlyByteBuf buffer, @NotNull List<T> toWrite, BiConsumer<T, RegistryFriendlyByteBuf> writeElement)
     {
         buffer.writeVarInt(toWrite.size());

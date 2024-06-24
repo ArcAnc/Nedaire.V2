@@ -26,7 +26,7 @@ public class NetworkEngine
     {
         final PayloadRegistrar registrar = event.registrar(NDatabase.MOD_ID);
 
-        registerMessage(registrar, MessageContainerData.STREAM_CODEC, MessageContainerData.TYPE, PacketFlow.CLIENTBOUND);
+        registerMessage(registrar, S2CMessageContainerData.STREAM_CODEC, S2CMessageContainerData.TYPE, PacketFlow.CLIENTBOUND);
     }
 
     private <T extends IMessage> void registerMessage(

@@ -10,12 +10,15 @@
 package com.arcanc.nedaire.registration;
 
 import com.arcanc.nedaire.content.block.NBlockBase;
+import com.arcanc.nedaire.content.block.NodeBlock;
+import com.arcanc.nedaire.content.block.block_entity.NodeBlockEntity;
 import com.arcanc.nedaire.content.gui.container_menu.NContainerMenu;
 import com.arcanc.nedaire.content.items.ItemInterfaces;
 import com.arcanc.nedaire.content.items.NBaseBlockItem;
 import com.arcanc.nedaire.util.NDatabase;
 import com.arcanc.nedaire.util.helpers.BlockHelper;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import net.minecraft.Util;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -37,20 +40,26 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CrossCollisionBlock;
 import net.minecraft.world.level.block.HopperBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public class NRegistration
 {
@@ -59,6 +68,7 @@ public class NRegistration
     {
         NRegistration.NBlocks.init(modEventBus);
         NRegistration.NItems.init(modEventBus);
+        NRegistration.NBlockEntities.init(modEventBus);
         NRegistration.NMenuTypes.init(modEventBus);
         NRegistration.NCreativeTabs.init(modEventBus);
         //custom registries
@@ -69,6 +79,13 @@ public class NRegistration
     {
         public static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(NDatabase.MOD_ID);
 
+        public static final BlockRegObject<NodeBlock, NBaseBlockItem> NODE_BLOCK = new BlockRegObject<>(
+                "node_block",
+                () -> BlockBehaviour.Properties.of().noOcclusion().noCollission().noLootTable(),
+                NodeBlock :: new,
+                Item.Properties::new,
+                NBaseBlockItem :: new);
+
         public static class BlockRegObject<T extends Block, I extends Item> implements Supplier<T>, ItemLike
         {
             private final DeferredHolder<Block, T> regObject;
@@ -76,12 +93,12 @@ public class NRegistration
             private final DeferredHolder<Item, I> itemBlock;
             private final Supplier<Item.Properties> itemProps;
 
-            public static BlockRegObject<NBlockBase, NBaseBlockItem> simple (String name, Supplier<Block.Properties> props)
+            public static @NotNull BlockRegObject<NBlockBase, NBaseBlockItem> simple (String name, Supplier<Block.Properties> props)
             {
                 return simple(name, props, p -> {});
             }
 
-            public static BlockRegObject<NBlockBase, NBaseBlockItem> simple (String name, Supplier<Block.Properties> props, Consumer<NBlockBase> extra)
+            public static @NotNull BlockRegObject<NBlockBase, NBaseBlockItem> simple (String name, Supplier<Block.Properties> props, Consumer<NBlockBase> extra)
             {
                 return new BlockRegObject<>(name, props, p -> Util.make(new NBlockBase(p), extra), NRegistration.NItems.baseProps, NBaseBlockItem::new);
             }
@@ -172,6 +189,34 @@ public class NRegistration
         public static void init(final IEventBus modEventBus)
         {
             ITEMS.register(modEventBus);
+        }
+    }
+
+    public static final class NBlockEntities
+    {
+        public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES = DeferredRegister.create(
+                BuiltInRegistries.BLOCK_ENTITY_TYPE, NDatabase.MOD_ID);
+
+        public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<NodeBlockEntity>> BE_NODE = BLOCK_ENTITIES.register(
+                "node", makeType(NodeBlockEntity :: new, NBlocks.NODE_BLOCK));
+
+        public static <T extends BlockEntity> Supplier<BlockEntityType<T>> makeType(BlockEntityType.BlockEntitySupplier<T> create, Supplier<? extends Block> valid)
+        {
+            return makeTypeMultipleBlocks(create, ImmutableSet.of(valid));
+        }
+
+        public static <T extends BlockEntity> Supplier<BlockEntityType<T>> makeTypeMultipleBlocks(
+                BlockEntityType.BlockEntitySupplier<T> create, Collection<? extends Supplier<? extends Block>> valid
+        )
+        {
+            return () -> new BlockEntityType<>(
+                    create, ImmutableSet.copyOf(valid.stream().map(Supplier::get).collect(Collectors.toList())), null
+            );
+        }
+
+        public static void init (final IEventBus modEventBus)
+        {
+            BLOCK_ENTITIES.register(modEventBus);
         }
     }
 
