@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "package": "com.arcanc.nedaire.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "refmap": "mixins.nedaire.refmap.json",
+  "mixins": [
+
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "minVersion": "0.8"
+}

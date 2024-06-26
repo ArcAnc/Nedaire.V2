@@ -9,13 +9,11 @@
 package com.arcanc.nedaire.data;
 
 import com.arcanc.nedaire.util.NDatabase;
-import net.minecraft.client.renderer.texture.atlas.sources.SingleFile;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.neoforged.neoforge.common.data.ExistingFileHelper;
 import net.neoforged.neoforge.common.data.SpriteSourceProvider;
 
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public class NSpriteSourceProvider extends SpriteSourceProvider
@@ -29,7 +27,7 @@ public class NSpriteSourceProvider extends SpriteSourceProvider
 	@Override
 	protected void gather()
 	{
-		atlas(SpriteSourceProvider.BLOCKS_ATLAS).addSource(new SingleFile(NDatabase.modRL("block/node/normal"), Optional.empty()));
+		//atlas(SpriteSourceProvider.BLOCKS_ATLAS).addSource(new SingleFile(NDatabase.modRL("block/node/normal"), Optional.empty()));
 	}
 
 }

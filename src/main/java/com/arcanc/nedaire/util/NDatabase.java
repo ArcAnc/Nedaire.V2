@@ -19,6 +19,43 @@ public class NDatabase
     public static final String MOD_ID = "nedaire";
     public static final String MOD_VERSION = "0.0.0";
 
+    public static final class FluidsInfo
+    {
+        public static class Names
+        {
+            public static final String ENERGON_RED = "energon_red";
+            public static final String ENERGON_BLUE = "energon_blue";
+            public static final String ENERGON_YELLOW = "energon_yellow";
+            public static final String ENERGON_GREEN = "energon_green";
+            public static final String ENERGON_DARK = "energon_dark";
+        }
+
+        public static ResourceLocation getStillLoc(String name)
+        {
+            return modRL("block/fluids/" + name +"/still");
+        }
+
+        public static ResourceLocation getFlowLoc(String name)
+        {
+            return modRL("block/fluids/" + name +"/flow");
+        }
+
+        public static ResourceLocation getOverlayLoc(String name)
+        {
+            return modRL("block/fluids/" + name + "/overlay");
+        }
+
+        public static ResourceLocation getBlockLocation(String name)
+        {
+            return modRL("block/fluids/" + name + "/block");
+        }
+
+        public static ResourceLocation getBucketLocation(String name)
+        {
+            return modRL("fluids/" + name + "/bucket");
+        }
+    }
+
     public static final class MagicInfo
     {
         public static final class SchoolsInfo

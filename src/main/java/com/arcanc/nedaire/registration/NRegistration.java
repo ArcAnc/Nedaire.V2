@@ -12,9 +12,14 @@ package com.arcanc.nedaire.registration;
 import com.arcanc.nedaire.content.block.NBlockBase;
 import com.arcanc.nedaire.content.block.NodeBlock;
 import com.arcanc.nedaire.content.block.block_entity.NodeBlockEntity;
+import com.arcanc.nedaire.content.capabilities.energon.EnergonType;
+import com.arcanc.nedaire.content.fluid.NEnergonFluidType;
+import com.arcanc.nedaire.content.fluid.NFluid;
+import com.arcanc.nedaire.content.fluid.NFluidType;
 import com.arcanc.nedaire.content.gui.container_menu.NContainerMenu;
 import com.arcanc.nedaire.content.items.ItemInterfaces;
 import com.arcanc.nedaire.content.items.NBaseBlockItem;
+import com.arcanc.nedaire.content.items.NBucketItem;
 import com.arcanc.nedaire.util.NDatabase;
 import com.arcanc.nedaire.util.helpers.BlockHelper;
 import com.google.common.collect.ImmutableList;
@@ -27,34 +32,38 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
-import net.minecraft.world.item.CreativeModeTab;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
+import net.minecraft.world.item.*;
+import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.ItemLike;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.CrossCollisionBlock;
-import net.minecraft.world.level.block.HopperBlock;
+import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
+import net.minecraft.world.level.material.Fluid;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.common.SoundActions;
+import net.neoforged.neoforge.fluids.BaseFlowingFluid;
+import net.neoforged.neoforge.fluids.FluidType;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
+import net.neoforged.neoforge.registries.NeoForgeRegistries;
 import net.neoforged.neoforge.registries.RegistryBuilder;
+import org.apache.commons.lang3.mutable.Mutable;
+import org.apache.commons.lang3.mutable.MutableObject;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -69,23 +78,24 @@ public class NRegistration
 
     public static void init(final IEventBus modEventBus)
     {
-        //NRegistration.NEnergonTypes.init(modEventBus);
+        NRegistration.NEnergonTypes.init(modEventBus);
         NRegistration.NBlocks.init(modEventBus);
         NRegistration.NItems.init(modEventBus);
         NRegistration.NBlockEntities.init(modEventBus);
+        NRegistration.NFluids.init(modEventBus);
         NRegistration.NMenuTypes.init(modEventBus);
         NRegistration.NCreativeTabs.init(modEventBus);
         //custom registries
         NRegistration.NMultiblocks.init(modEventBus);
     }
 
-    /*public static final class NEnergonTypes
+    public static final class NEnergonTypes
     {
         public static final ResourceKey<Registry<EnergonType>> REGISTRY_ENERGON_TYPE = ResourceKey.createRegistryKey(ResourceLocation.withDefaultNamespace(NDatabase.CapabilitiesInfo.EnergonInfo.EnergonTypeInfo.TAG_LOCATION));
 
         public static final DeferredRegister<EnergonType> ENERGON_TYPES = DeferredRegister.create(REGISTRY_ENERGON_TYPE, NDatabase.MOD_ID);
 
-        public static final Registry<EnergonType> ENERGON_TYPES_BUILTIN = ENERGON_TYPES.makeRegistry(registryBuilder -> makeRegistry(registryBuilder, REGISTRY_ENERGON_TYPE).sync(false));
+        public static final Registry<EnergonType> ENERGON_TYPES_BUILTIN = ENERGON_TYPES.makeRegistry(registryBuilder -> makeRegistry(registryBuilder, REGISTRY_ENERGON_TYPE));
 
         public static final DeferredHolder<EnergonType, EnergonType> RED = registerType(NDatabase.CapabilitiesInfo.EnergonInfo.EnergonTypeInfo.RED, new Color(150, 19, 8, 255));
         public static final DeferredHolder<EnergonType, EnergonType> DARK = registerType(NDatabase.CapabilitiesInfo.EnergonInfo.EnergonTypeInfo.DARK, new Color(56, 8, 84, 255));
@@ -101,10 +111,10 @@ public class NRegistration
 
         public static void init(final @NotNull IEventBus modEventBus)
         {
-            modEventBus.register(ENERGON_TYPES);
+            ENERGON_TYPES.register(modEventBus);
         }
     }
-    */
+
     public static final class NBlocks
     {
         public static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(NDatabase.MOD_ID);
@@ -247,6 +257,238 @@ public class NRegistration
         public static void init (final IEventBus modEventBus)
         {
             BLOCK_ENTITIES.register(modEventBus);
+        }
+    }
+
+    public static final class NFluids
+    {
+        public static final DeferredRegister<Fluid> FLUIDS = DeferredRegister.create(Registries.FLUID, NDatabase.MOD_ID);
+        public static final DeferredRegister<FluidType> FLUID_TYPES = DeferredRegister.create(NeoForgeRegistries.Keys.FLUID_TYPES, NDatabase.MOD_ID);
+
+        private static final Consumer<FluidType.Properties> baseEnergonTypeProps = typeProps -> typeProps.
+                lightLevel(10).
+                density(250).
+                viscosity(500).
+                rarity(Rarity.COMMON);
+
+        private static final Consumer<BaseFlowingFluid.Properties> baseEnergonFluidProps = props -> props.slopeFindDistance(2).levelDecreasePerBlock(2).explosionResistance(100);
+
+        public static final FluidEntry ENERGON_RED = FluidEntry.makeEnergon(
+                NDatabase.CapabilitiesInfo.EnergonInfo.EnergonTypeInfo.RED,
+                NEnergonTypes.RED,
+                baseEnergonFluidProps,
+                typeProps -> baseEnergonTypeProps.accept(typeProps.rarity(Rarity.EPIC))
+        );
+
+        public static final FluidEntry ENERGON_BLUE = FluidEntry.makeEnergon(
+                NDatabase.CapabilitiesInfo.EnergonInfo.EnergonTypeInfo.BLUE,
+                NEnergonTypes.BLUE,
+                baseEnergonFluidProps,
+                baseEnergonTypeProps
+        );
+
+        public static final FluidEntry ENERGON_GREEN = FluidEntry.makeEnergon(
+                NDatabase.CapabilitiesInfo.EnergonInfo.EnergonTypeInfo.GREEN,
+                NEnergonTypes.GREEN,
+                baseEnergonFluidProps,
+                typeProps -> baseEnergonTypeProps.accept(typeProps.rarity(Rarity.EPIC))
+        );
+
+        public static final FluidEntry ENERGON_DARK = FluidEntry.makeEnergon(
+                NDatabase.CapabilitiesInfo.EnergonInfo.EnergonTypeInfo.DARK,
+                NEnergonTypes.DARK,
+                baseEnergonFluidProps,
+                typeProps -> baseEnergonTypeProps.accept(typeProps.rarity(Rarity.EPIC))
+        );
+
+        public static final FluidEntry ENERGON_YELLOW = FluidEntry.makeEnergon(
+                NDatabase.CapabilitiesInfo.EnergonInfo.EnergonTypeInfo.YELLOW,
+                NEnergonTypes.YELLOW,
+                baseEnergonFluidProps,
+                typeProps -> baseEnergonTypeProps.accept(typeProps.rarity(Rarity.EPIC))
+        );
+
+        public record FluidEntry(DeferredHolder<Fluid, NFluid> still,
+                                 DeferredHolder<Fluid, NFluid> flowing,
+                                 DeferredHolder<Block, LiquidBlock> block,
+                                 DeferredHolder<Item, BucketItem> bucket,
+                                 DeferredHolder<FluidType, FluidType> type,
+                                 List<Property<?>> props)
+        {
+
+            private static @NotNull FluidEntry makeEnergon(String name, DeferredHolder<EnergonType, EnergonType> energonType, Consumer<BaseFlowingFluid.Properties> props, @Nullable Consumer<FluidType.Properties> buildAttributes)
+            {
+                FluidType.Properties builder = FluidType.Properties.create()
+                        .sound(SoundActions.BUCKET_FILL, SoundEvents.BUCKET_FILL)
+                        .sound(SoundActions.BUCKET_EMPTY, SoundEvents.BUCKET_EMPTY);
+                if(buildAttributes!=null)
+                    buildAttributes.accept(builder);
+                DeferredHolder<FluidType, FluidType> type = FLUID_TYPES.register(
+                        name, () -> makeEnergonTypeWithTextures(
+                                builder,
+                                NDatabase.FluidsInfo.getStillLoc("energon"),
+                                NDatabase.FluidsInfo.getFlowLoc("energon"),
+                                NDatabase.FluidsInfo.getOverlayLoc("energon"),
+                                energonType.get())
+                );
+                Mutable<FluidEntry> thisMutable = new MutableObject<>();
+                NFluid.FluidPropsGetter fluidProps = BaseFlowingFluid.Properties::new;
+                DeferredHolder<Fluid, NFluid> still = FLUIDS.register(NDatabase.FluidsInfo.getStillLoc(name).getPath(), () -> NFluid.makeFluid(NFluid.NFluidSource :: new,
+                        fluidProps.get(
+                                        thisMutable.getValue().type(),
+                                        thisMutable.getValue().still(),
+                                        thisMutable.getValue().flowing()).
+                                block(thisMutable.getValue().block()).
+                                bucket(thisMutable.getValue().bucket()),
+                        props));
+                DeferredHolder<Fluid, NFluid> flowing = FLUIDS.register(NDatabase.FluidsInfo.getFlowLoc(name).getPath(), () -> NFluid.makeFluid(NFluid.NFluidFlowing :: new,
+                        fluidProps.get(
+                                        thisMutable.getValue().type(),
+                                        thisMutable.getValue().still(),
+                                        thisMutable.getValue().flowing()).
+                                block(thisMutable.getValue().block()).
+                                bucket(thisMutable.getValue().bucket()),
+                        props));
+                DeferredHolder<Block, LiquidBlock> block = NBlocks.BLOCKS.register(NDatabase.FluidsInfo.getBlockLocation(name).getPath(),
+                        () -> new LiquidBlock(thisMutable.getValue().still().get(), BlockBehaviour.Properties.ofFullCopy(Blocks.WATER).noLootTable()));
+                DeferredHolder<Item, BucketItem> bucket = NItems.ITEMS.register(NDatabase.FluidsInfo.getBucketLocation(name).getPath(), () -> makeBucket(still, 0));
+                FluidEntry entry = new FluidEntry(still, flowing, block, bucket, type, List.of());
+                thisMutable.setValue(entry);
+                return entry;
+            }
+            private static @NotNull FluidEntry make(String name, NFluidType.FogGetter fogColor, Consumer<BaseFlowingFluid.Properties> props)
+            {
+                return make(name, () -> 0xffffffff, fogColor, props);
+            }
+
+            private static @NotNull FluidEntry make(String name, Supplier<Integer> tintColor, NFluidType.FogGetter fogColor, Consumer<BaseFlowingFluid.Properties> props)
+            {
+                return make(name, 0, NDatabase.FluidsInfo.getStillLoc(name), NDatabase.FluidsInfo.getFlowLoc(name), NDatabase.FluidsInfo.getOverlayLoc(name), tintColor, fogColor, props);
+            }
+
+            private static @NotNull FluidEntry make(String name, int burnTime, Supplier<Integer> tintColor, NFluidType.FogGetter fogColor, Consumer<BaseFlowingFluid.Properties> props)
+            {
+                return make(name, burnTime, NDatabase.FluidsInfo.getStillLoc(name), NDatabase.FluidsInfo.getFlowLoc(name), NDatabase.FluidsInfo.getOverlayLoc(name), tintColor, fogColor, props);
+            }
+
+            private static @NotNull FluidEntry make(String name, ResourceLocation stillTex, ResourceLocation flowingTex, ResourceLocation overlayTex, Supplier<Integer> tintColor, NFluidType.FogGetter fogColor, Consumer<BaseFlowingFluid.Properties> props)
+            {
+                return make(name, 0, stillTex, flowingTex, overlayTex, tintColor, fogColor, props);
+            }
+
+            private static @NotNull FluidEntry make(
+                    String name, Supplier<Integer> tintColor, NFluidType.FogGetter fogColor, Consumer<BaseFlowingFluid.Properties> props, Consumer<FluidType.Properties> buildAttributes
+            )
+            {
+                return make(name, 0, NDatabase.FluidsInfo.getStillLoc(name), NDatabase.FluidsInfo.getFlowLoc(name), NDatabase.FluidsInfo.getOverlayLoc(name), tintColor, fogColor, props, buildAttributes);
+            }
+
+            private static @NotNull FluidEntry make(String name, int burnTime, ResourceLocation stillTex, ResourceLocation flowingTex, ResourceLocation overlayTex, Supplier<Integer> tintColor, NFluidType.FogGetter fogColor, Consumer<BaseFlowingFluid.Properties> props)
+            {
+                return make(name, burnTime, stillTex, flowingTex, overlayTex, tintColor, fogColor, props, null);
+            }
+
+            private static @NotNull FluidEntry make(
+                    String name, int burnTime,
+                    ResourceLocation stillTex, ResourceLocation flowingTex, ResourceLocation overlayTex, Supplier<Integer> tintColor, NFluidType.FogGetter fogColor, @Nullable Consumer<BaseFlowingFluid.Properties> props,
+                    @Nullable Consumer<FluidType.Properties> buildAttributes
+            )
+            {
+                return make(
+                        name, burnTime, stillTex, flowingTex, overlayTex, tintColor, fogColor, NFluid.NFluidSource :: new, NFluid.NFluidFlowing :: new, props, buildAttributes,
+                        ImmutableList.of()
+                );
+            }
+
+            private static @NotNull FluidEntry make(
+                    String name, int burnTime,
+                    ResourceLocation stillTex, ResourceLocation flowingTex, ResourceLocation overlayTex, Supplier<Integer> tintColor, NFluidType.FogGetter fogColor,
+                    Function<BaseFlowingFluid.Properties, ? extends NFluid> makeStill, Function<BaseFlowingFluid.Properties, ? extends NFluid> makeFlowing, @Nullable Consumer<BaseFlowingFluid.Properties> props,
+                    @Nullable Consumer<FluidType.Properties> buildAttributes, List<Property<?>> properties)
+            {
+                FluidType.Properties builder = FluidType.Properties.create().
+                        sound(SoundActions.BUCKET_FILL, SoundEvents.BUCKET_FILL).
+                        sound(SoundActions.BUCKET_EMPTY, SoundEvents.BUCKET_EMPTY);
+                if(buildAttributes!=null)
+                    buildAttributes.accept(builder);
+                DeferredHolder<FluidType, FluidType> type = FLUID_TYPES.register(
+                        name, () -> makeTypeWithTextures(builder, stillTex, flowingTex, overlayTex, tintColor, fogColor)
+                );
+                Mutable<FluidEntry> thisMutable = new MutableObject<>();
+                NFluid.FluidPropsGetter fluidProps = BaseFlowingFluid.Properties::new;
+                DeferredHolder<Fluid, NFluid> still = FLUIDS.register(NDatabase.FluidsInfo.getStillLoc(name).getPath(), () -> NFluid.makeFluid(makeStill,
+                        fluidProps.get(
+                                        thisMutable.getValue().type(),
+                                        thisMutable.getValue().still(),
+                                        thisMutable.getValue().flowing()).
+                                block(thisMutable.getValue().block()).
+                                bucket(thisMutable.getValue().bucket()),
+                        props));
+                DeferredHolder<Fluid, NFluid> flowing = FLUIDS.register(NDatabase.FluidsInfo.getFlowLoc(name).getPath(), () -> NFluid.makeFluid(makeFlowing,
+                        fluidProps.get(
+                                        thisMutable.getValue().type(),
+                                        thisMutable.getValue().still(),
+                                        thisMutable.getValue().flowing()).
+                                block(thisMutable.getValue().block()).
+                                bucket(thisMutable.getValue().bucket()),
+                        props));
+                DeferredHolder<Block, LiquidBlock> block = NBlocks.BLOCKS.register(NDatabase.FluidsInfo.getBlockLocation(name).getPath(),
+                        () -> new LiquidBlock(thisMutable.getValue().still().get(), BlockBehaviour.Properties.ofFullCopy(Blocks.WATER).noLootTable()));
+                DeferredHolder<Item, BucketItem> bucket = NItems.ITEMS.register(NDatabase.FluidsInfo.getBucketLocation(name).getPath(), () -> makeBucket(still, burnTime));
+                FluidEntry entry = new FluidEntry(still, flowing, block, bucket, type, properties);
+                thisMutable.setValue(entry);
+                return entry;
+            }
+
+            private static NEnergonFluidType makeEnergonTypeWithTextures(FluidType.Properties props, ResourceLocation stillTex, ResourceLocation flowingTex, ResourceLocation overlayTex, EnergonType type)
+            {
+                return new NEnergonFluidType(stillTex, flowingTex, overlayTex, type, props)
+                {
+                    @Override
+                    public @NotNull String getDescriptionId()
+                    {
+                        ResourceLocation loc = NeoForgeRegistries.FLUID_TYPES.getKey(this);
+                        if (loc != null)
+                            return loc.getNamespace() + "." + "fluid_type" + "." + loc.getPath().replace('/', '.');
+                        return "unregistered.fluid_type";
+                    }
+                };
+            }
+
+            private static FluidType makeTypeWithTextures(FluidType.Properties props, ResourceLocation stillTex, ResourceLocation flowingTex, ResourceLocation overlayTex, Supplier<Integer> tintColor, NFluidType.FogGetter fogColor)
+            {
+                return new NFluidType(stillTex, flowingTex, overlayTex, tintColor, fogColor, props)
+                {
+                    @Override
+                    public @NotNull String getDescriptionId()
+                    {
+                        ResourceLocation loc = NeoForgeRegistries.FLUID_TYPES.getKey(this);
+                        if (loc != null)
+                            return loc.getNamespace() + "." + "fluid_type" + "." + loc.getPath().replace('/', '.');
+                        return "unregistered.fluid_type";
+                    }
+                };
+            }
+
+            private static @NotNull BucketItem makeBucket (@NotNull DeferredHolder<Fluid, NFluid> still, int burnTime)
+            {
+                return new NBucketItem(still.get(), new Item.Properties().stacksTo(1).craftRemainder(Items.BUCKET))
+                {
+                    @Override
+                    public int getBurnTime(@NotNull ItemStack itemStack, @Nullable RecipeType<?> recipeType)
+                    {
+                        return burnTime;
+                    }
+                };
+            }
+
+        }
+
+
+        public static void init(@NotNull IEventBus modEventBus)
+        {
+            FLUIDS.register(modEventBus);
+            FLUID_TYPES.register(modEventBus);
         }
     }
 
@@ -402,8 +644,8 @@ public class NRegistration
 
 
 
-    public static <T> @NotNull RegistryBuilder<T> makeRegistry(RegistryBuilder<T> registryBuilder, ResourceKey<? extends Registry<T>> key)
+    public static <T> @NotNull RegistryBuilder<T> makeRegistry(@NotNull RegistryBuilder<T> registryBuilder, @NotNull ResourceKey<? extends Registry<T>> key)
     {
-        return registryBuilder.defaultKey(key.location()).maxId(Integer.MAX_VALUE - 1);
+        return registryBuilder.defaultKey(key.location()).maxId(Integer.MAX_VALUE - 1).sync(true);
     }
 }

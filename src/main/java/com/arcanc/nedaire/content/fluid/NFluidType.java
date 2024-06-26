@@ -26,11 +26,11 @@ import java.util.function.Supplier;
 
 public class NFluidType extends FluidType
 {
-    private final ResourceLocation stillTexture;
-    private final ResourceLocation flowingTexture;
-    private final ResourceLocation overlayTexture;
-    private final Supplier<Integer> tintColor;
-    private final NFluidType.FogGetter fogColor;
+    protected final ResourceLocation stillTexture;
+    protected final ResourceLocation flowingTexture;
+    protected final ResourceLocation overlayTexture;
+    protected final Supplier<Integer> tintColor;
+    protected final NFluidType.FogGetter fogColor;
 
     public NFluidType(final ResourceLocation stillTexture, final ResourceLocation flowingTexture, final ResourceLocation overlayTexture, final Supplier<Integer> tintColor, final NFluidType.FogGetter fogColor, final Properties properties)
     {
