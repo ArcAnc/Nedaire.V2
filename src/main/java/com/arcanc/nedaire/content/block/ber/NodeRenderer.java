@@ -22,12 +22,10 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
-import org.joml.Quaternionf;
-import org.joml.Vector3f;
 
 public class NodeRenderer implements BlockEntityRenderer<NodeBlockEntity>
 {
-    private static final ResourceLocation TEXTURE = NDatabase.modRL("textures/block/node/normal");
+    private static final ResourceLocation TEXTURE = NDatabase.modRL("textures/block/node/normal.png");
     public NodeRenderer(BlockEntityRendererProvider.Context ctx)
     {
 
@@ -46,48 +44,44 @@ public class NodeRenderer implements BlockEntityRenderer<NodeBlockEntity>
         pPoseStack.mulPose(camera.rotation());
         pPoseStack.mulPose(Axis.YP.rotationDegrees(180f));
 
-        VertexConsumer builder = pBuffer.getBuffer(RenderType.entityTranslucent(TEXTURE.withSuffix(".png")));
+        VertexConsumer builder = pBuffer.getBuffer(RenderType.entityTranslucent(TEXTURE));
 
-        Quaternionf rotation = new Quaternionf().set(camera.rotation());
-        renderRotatedQuad(pPoseStack.last(), builder, rotation, pPackedLight, pPackedOverlay, pPartialTick);
+        renderRotatedQuad(pPoseStack.last(), builder, pPackedLight, pPackedOverlay);
         pPoseStack.popPose();
     }
 
-    public void renderRotatedQuad(PoseStack.Pose pose, VertexConsumer builder, Quaternionf rotVec, int packedLight, int packedOverlay, float partialTicks)
+    public void renderRotatedQuad(PoseStack.Pose pose, VertexConsumer builder, int packedLight, int packedOverlay)
     {
         long time = System.currentTimeMillis();
         float quadSize = 0.6f;
         int tickAmount = 2048/64;
         int timePerTick = 5;
 
-        time *= 5;
+        time *= timePerTick;
         time *= 2;
         time /=1000;
-        time %= 32;
+        time %= tickAmount;
 
         float u0 = 0.0f;
         float u1 = 1.0f;
         float v0 = time / 32f;
         float v1 = (time + 1) / 32f;
 
-        renderVertex(pose, builder, rotVec, quadSize, -quadSize, quadSize, u1, v1, packedLight, packedOverlay);
-        renderVertex(pose, builder, rotVec, quadSize, quadSize, quadSize, u1, v0, packedLight, packedOverlay);
-        renderVertex(pose, builder, rotVec, -quadSize, quadSize, quadSize, u0, v0, packedLight, packedOverlay);
-        renderVertex(pose, builder, rotVec, -quadSize, -quadSize, quadSize, u0, v1, packedLight, packedOverlay);
+        renderVertex(pose, builder, quadSize, -quadSize, u1, v1, packedLight, packedOverlay);
+        renderVertex(pose, builder, quadSize, quadSize, u1, v0, packedLight, packedOverlay);
+        renderVertex(pose, builder, -quadSize, quadSize, u0, v0, packedLight, packedOverlay);
+        renderVertex(pose, builder, -quadSize, -quadSize, u0, v1, packedLight, packedOverlay);
     }
 
     public void renderVertex(PoseStack.Pose pose,
                              @NotNull VertexConsumer builder,
-                             Quaternionf rotation,
                              float offsetX,
                              float offsetY,
-                             float quadSize,
                              float u,
                              float v,
                              int packedLight,
                              int packedOverlay)
     {
-        Vector3f vec = new Vector3f(offsetX, offsetY, 0.0f).rotate(rotation).mul(quadSize);
         builder.addVertex(pose, offsetX, offsetY, 0.0f).
                 setLight(packedLight).
                 setOverlay(packedOverlay).

@@ -20,10 +20,12 @@ import com.arcanc.nedaire.util.helpers.BlockHelper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import net.minecraft.Util;
+import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.MenuProvider;
@@ -48,6 +50,7 @@ import net.minecraft.world.level.block.state.properties.Property;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
+import net.neoforged.neoforge.registries.RegistryBuilder;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
@@ -66,6 +69,7 @@ public class NRegistration
 
     public static void init(final IEventBus modEventBus)
     {
+        //NRegistration.NEnergonTypes.init(modEventBus);
         NRegistration.NBlocks.init(modEventBus);
         NRegistration.NItems.init(modEventBus);
         NRegistration.NBlockEntities.init(modEventBus);
@@ -75,6 +79,32 @@ public class NRegistration
         NRegistration.NMultiblocks.init(modEventBus);
     }
 
+    /*public static final class NEnergonTypes
+    {
+        public static final ResourceKey<Registry<EnergonType>> REGISTRY_ENERGON_TYPE = ResourceKey.createRegistryKey(ResourceLocation.withDefaultNamespace(NDatabase.CapabilitiesInfo.EnergonInfo.EnergonTypeInfo.TAG_LOCATION));
+
+        public static final DeferredRegister<EnergonType> ENERGON_TYPES = DeferredRegister.create(REGISTRY_ENERGON_TYPE, NDatabase.MOD_ID);
+
+        public static final Registry<EnergonType> ENERGON_TYPES_BUILTIN = ENERGON_TYPES.makeRegistry(registryBuilder -> makeRegistry(registryBuilder, REGISTRY_ENERGON_TYPE).sync(false));
+
+        public static final DeferredHolder<EnergonType, EnergonType> RED = registerType(NDatabase.CapabilitiesInfo.EnergonInfo.EnergonTypeInfo.RED, new Color(150, 19, 8, 255));
+        public static final DeferredHolder<EnergonType, EnergonType> DARK = registerType(NDatabase.CapabilitiesInfo.EnergonInfo.EnergonTypeInfo.DARK, new Color(56, 8, 84, 255));
+        public static final DeferredHolder<EnergonType, EnergonType> GREEN = registerType(NDatabase.CapabilitiesInfo.EnergonInfo.EnergonTypeInfo.GREEN, new Color(19, 82, 15, 255));
+        public static final DeferredHolder<EnergonType, EnergonType> YELLOW = registerType(NDatabase.CapabilitiesInfo.EnergonInfo.EnergonTypeInfo.YELLOW, new Color(215, 222, 16, 255));
+        public static final DeferredHolder<EnergonType, EnergonType> BLUE = registerType(NDatabase.CapabilitiesInfo.EnergonInfo.EnergonTypeInfo.BLUE, new Color(8, 93, 150, 255));
+
+        private static @NotNull DeferredHolder<EnergonType, EnergonType> registerType(String name, Color color)
+        {
+            final EnergonType type = new EnergonType(color);
+            return ENERGON_TYPES.register(name, () -> type);
+        }
+
+        public static void init(final @NotNull IEventBus modEventBus)
+        {
+            modEventBus.register(ENERGON_TYPES);
+        }
+    }
+    */
     public static final class NBlocks
     {
         public static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(NDatabase.MOD_ID);
@@ -368,5 +398,12 @@ public class NRegistration
                 });
             }
         }
+    }
+
+
+
+    public static <T> @NotNull RegistryBuilder<T> makeRegistry(RegistryBuilder<T> registryBuilder, ResourceKey<? extends Registry<T>> key)
+    {
+        return registryBuilder.defaultKey(key.location()).maxId(Integer.MAX_VALUE - 1);
     }
 }

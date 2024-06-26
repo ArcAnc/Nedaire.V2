@@ -32,6 +32,7 @@ import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.common.data.ExistingFileHelper;
 import net.neoforged.neoforge.data.event.GatherDataEvent;
+import net.neoforged.neoforge.registries.NewRegistryEvent;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 
@@ -55,6 +56,7 @@ public class Nedaire
 
     private void setupEvents(final IEventBus modEventBus)
     {
+        modEventBus.addListener(this :: registerCustomRegistries);
         registerNetwork(modEventBus);
         registerContainerMenuEvents();
 
@@ -68,7 +70,6 @@ public class Nedaire
 
     private void registerNetwork(final @NotNull IEventBus modEventBus)
     {
-        LOGGER.warn("Register BE Renderers");
         modEventBus.addListener(NetworkEngine :: setupMessages);
     }
 
@@ -88,6 +89,11 @@ public class Nedaire
         LOGGER.info("{} Started Server Initialization", NDatabase.MOD_ID);
 
         LOGGER.info("{} Finished Server Initialization", NDatabase.MOD_ID);
+    }
+
+    private void registerCustomRegistries(final @NotNull NewRegistryEvent event)
+    {
+        //event.register(NRegistration.NEnergonTypes.ENERGON_TYPES_BUILTIN);
     }
 
     public void gatherData(final @NotNull GatherDataEvent event)

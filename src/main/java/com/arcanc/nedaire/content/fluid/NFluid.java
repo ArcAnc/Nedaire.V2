@@ -15,6 +15,7 @@ import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 import net.neoforged.neoforge.fluids.BaseFlowingFluid;
 import net.neoforged.neoforge.fluids.FluidType;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import java.util.function.Consumer;
@@ -24,7 +25,7 @@ import java.util.function.Supplier;
 public abstract class NFluid extends BaseFlowingFluid
 {
 
-    public static NFluid makeFluid(Function<Properties, ? extends NFluid> make, Properties properties, Consumer<Properties> props)
+    public static NFluid makeFluid(@NotNull Function<Properties, ? extends NFluid> make, Properties properties, Consumer<Properties> props)
     {
         return make.apply(Util.make(properties, props));
     }

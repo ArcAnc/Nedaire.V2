@@ -44,7 +44,7 @@ public class NFluidType extends FluidType
     }
 
     @Override
-    public void initializeClient(Consumer<IClientFluidTypeExtensions> consumer)
+    public void initializeClient(@NotNull Consumer<IClientFluidTypeExtensions> consumer)
     {
         consumer.accept(new IClientFluidTypeExtensions()
         {

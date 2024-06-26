@@ -7,7 +7,7 @@
  * Details can be found in the license file in the root folder of this project
  */
 
-package com.arcanc.nedaire.util.inventory;
+package com.arcanc.nedaire.util.inventory.items;
 
 import com.arcanc.nedaire.util.NDatabase;
 import com.google.common.base.Preconditions;
@@ -115,7 +115,6 @@ public class ItemStackHolder
             stack.shrink(retCount);
             if (stack.isEmpty())
                 this.stack = ItemStack.EMPTY;
-                //setStack(ItemStack.EMPTY);
             update();
         }
         return ret;
@@ -146,7 +145,7 @@ public class ItemStackHolder
     {
         CompoundTag tag = new CompoundTag();
 
-        tag.put(NDatabase.CapabilitiesInfo.InventoryInfo.ItemStackHolderInfo.ITEM, this.stack.save(provider));
+        tag.put(NDatabase.CapabilitiesInfo.InventoryInfo.ItemStackHolderInfo.ITEM, this.stack.saveOptional(provider));
         tag.putInt(NDatabase.CapabilitiesInfo.InventoryInfo.ItemStackHolderInfo.CAPACITY, this.capacity);
         tag.putInt(NDatabase.CapabilitiesInfo.InventoryInfo.ItemStackHolderInfo.SLOT_TYPE, this.slotType.ordinal());
 
@@ -155,7 +154,7 @@ public class ItemStackHolder
 
     public void deserializeNBT(HolderLookup.Provider provider, @NotNull CompoundTag tag)
     {
-        ItemStack.parse(provider, tag.get(NDatabase.CapabilitiesInfo.InventoryInfo.ItemStackHolderInfo.ITEM)).ifPresent(this :: setStack);
+        this.setStack(ItemStack.parseOptional(provider, tag.getCompound(NDatabase.CapabilitiesInfo.InventoryInfo.ItemStackHolderInfo.ITEM)));
         this.capacity = tag.getInt(NDatabase.CapabilitiesInfo.InventoryInfo.ItemStackHolderInfo.CAPACITY);
         this.slotType = SlotType.values()[tag.getInt(NDatabase.CapabilitiesInfo.InventoryInfo.ItemStackHolderInfo.SLOT_TYPE)];
     }

@@ -9,21 +9,16 @@
 
 package com.arcanc.nedaire.content.capabilities;
 
-import com.arcanc.nedaire.content.capabilities.energon.IEnergon;
 import com.arcanc.nedaire.util.NDatabase;
-import com.arcanc.nedaire.util.inventory.ItemCapabilityAccess;
-import net.minecraft.core.Direction;
+import com.arcanc.nedaire.util.inventory.items.ItemCapabilityAccess;
 import net.neoforged.neoforge.capabilities.BlockCapability;
-import net.neoforged.neoforge.capabilities.EntityCapability;
-import net.neoforged.neoforge.capabilities.ItemCapability;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.items.IItemHandler;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class NCapabilities
 {
-    public static final class Energon
+    /*public static final class Energon
     {
         public static final BlockCapability<IEnergon, @Nullable Direction> BLOCK = BlockCapability.createSided(NDatabase.modRL(NDatabase.CapabilitiesInfo.EnergonInfo.CAPABILITY_NAME), IEnergon.class);
         public static final EntityCapability<IEnergon, @Nullable Direction> ENTITY = EntityCapability.createSided(NDatabase.modRL(NDatabase.CapabilitiesInfo.EnergonInfo.CAPABILITY_NAME), IEnergon.class);
@@ -31,7 +26,7 @@ public class NCapabilities
 
         private Energon() {}
     }
-
+    */
     public static final class ItemHandler
     {
         public static final BlockCapability<IItemHandler, @NotNull ItemCapabilityAccess> BLOCK = BlockCapability.create(NDatabase.modRL(NDatabase.CapabilitiesInfo.InventoryInfo.CAPABILITY_NAME), IItemHandler.class, ItemCapabilityAccess.class);

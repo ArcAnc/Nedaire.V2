@@ -10,6 +10,7 @@
 package com.arcanc.nedaire.util;
 
 import net.minecraft.resources.ResourceLocation;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Function;
 
@@ -41,6 +42,15 @@ public class NDatabase
     {
         public static final class EnergonInfo
         {
+            public static final class EnergonTypeInfo
+            {
+                public static final String TAG_LOCATION = "energon_type";
+                public static final String RED = "red";
+                public static final String DARK = "dark";
+                public static final String GREEN = "green";
+                public static final String YELLOW = "yellow";
+                public static final String BLUE = "blue";
+            }
             public static final String CAPABILITY_NAME = "energon";
             public static final String POWER = "power";
             public static final String MAX_POWER = "max_power";
@@ -60,6 +70,21 @@ public class NDatabase
                 public static final String ITEM = "item";
                 public static final String CAPACITY = "capacity";
                 public static final String SLOT_TYPE = "slot_type";
+            }
+        }
+
+        public static final class FluidInfo
+        {
+            public static final String CAPABILITY_NAME = "fluid_handler";
+
+            public static final String FLUIDS = "fluids";
+            public static final String SLOT = "slot";
+
+            public static final class FluidStackHolderInfo
+            {
+                public static final String FLUID = "fluid";
+                public static final String CAPACITY = "capacity";
+                public static final String TANK_TYPE = "tank_type";
             }
         }
     }
@@ -96,12 +121,12 @@ public class NDatabase
         public static final String MASTER_POS = nameBuilder.apply("master_pos");
     }
 
-    public static ResourceLocation modRL(String s)
+    public static @NotNull ResourceLocation modRL(@NotNull String s)
     {
         return ResourceLocation.fromNamespaceAndPath(MOD_ID, s);
     }
 
-    public static String modRLStr(String s)
+    public static @NotNull String modRLStr(@NotNull String s)
     {
         return modRL(s).toString();
     }

@@ -7,7 +7,7 @@
  * Details can be found in the license file in the root folder of this project
  */
 
-package com.arcanc.nedaire.util.inventory;
+package com.arcanc.nedaire.util.inventory.items;
 
 import com.arcanc.nedaire.util.NDatabase;
 import net.minecraft.core.HolderLookup;
