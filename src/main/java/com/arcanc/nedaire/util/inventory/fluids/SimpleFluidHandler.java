@@ -178,6 +178,20 @@ public class SimpleFluidHandler implements IFluidHandler, INBTSerializable<Compo
         callback.onFluidChanged(slot);
     }
 
+    public void clear()
+    {
+        this.tanks.clear();
+    }
+
+    public boolean isEmpty ()
+    {
+        if(!tanks.isEmpty())
+            for (FluidStackHolder tank : this.tanks)
+                if (!tank.isEmpty())
+                    return false;
+        return true;
+    }
+
     public IFluidHandler getHandler(TankType type)
     {
         return this;

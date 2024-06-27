@@ -11,6 +11,7 @@ package com.arcanc.nedaire;
 
 
 import com.arcanc.nedaire.content.block.ber.NodeRenderer;
+import com.arcanc.nedaire.content.block.block_entity.NodeBlockEntity;
 import com.arcanc.nedaire.content.capabilities.NCapabilities;
 import com.arcanc.nedaire.content.fluid.NEnergonFluidType;
 import com.arcanc.nedaire.content.gui.container_menu.NContainerMenu;
@@ -81,10 +82,12 @@ public class Nedaire
         modEventBus.addListener(this :: gatherData);
     }
 
-    private void registerCapabilitiesEvent(final RegisterCapabilitiesEvent event)
+    private void registerCapabilitiesEvent(final @NotNull RegisterCapabilitiesEvent event)
     {
         NRegistration.NItems.ITEMS.getEntries().stream().filter(item -> item.get() instanceof NBucketItem).
                 map(DeferredHolder :: get).forEach(item -> event.registerItem(Capabilities.FluidHandler.ITEM, (stack, ctx) -> new FluidBucketWrapper(stack), item));
+
+        event.registerBlockEntity(Capabilities.FluidHandler.BLOCK, NRegistration.NBlockEntities.BE_NODE.get(), NodeBlockEntity::getHandler);
     }
 
     private void registerNetwork(final @NotNull IEventBus modEventBus)

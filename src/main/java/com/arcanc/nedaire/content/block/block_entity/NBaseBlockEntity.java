@@ -28,23 +28,23 @@ public abstract class NBaseBlockEntity extends BlockEntity
     }
 
     @Override
-    protected void loadAdditional(@NotNull CompoundTag pTag, HolderLookup.@NotNull Provider pRegistries)
+    protected void loadAdditional(@NotNull CompoundTag pTag, HolderLookup.@NotNull Provider registries)
     {
-        super.loadAdditional(pTag, pRegistries);
+        super.loadAdditional(pTag, registries);
 
-        this.readCustomTag(pTag, false);
+        this.readCustomTag(pTag, registries, false);
     }
 
-    public abstract void readCustomTag(@NotNull CompoundTag tag, boolean descrPacket);
+    public abstract void readCustomTag(@NotNull CompoundTag tag, HolderLookup.@NotNull Provider registries, boolean descrPacket);
 
     @Override
-    protected void saveAdditional(@NotNull CompoundTag pTag, HolderLookup.@NotNull Provider pRegistries)
+    protected void saveAdditional(@NotNull CompoundTag pTag, HolderLookup.@NotNull Provider registries)
     {
-        super.saveAdditional(pTag, pRegistries);
-        this.writeCustomTag(pTag, false);
+        super.saveAdditional(pTag, registries);
+        this.writeCustomTag(pTag, registries,false);
     }
 
-    public abstract void writeCustomTag(@NotNull CompoundTag pTag, boolean descrPacker);
+    public abstract void writeCustomTag(@NotNull CompoundTag pTag, HolderLookup.@NotNull Provider pRegistries, boolean descrPacker);
 
     @Override
     public ClientboundBlockEntityDataPacket getUpdatePacket()
@@ -52,29 +52,29 @@ public abstract class NBaseBlockEntity extends BlockEntity
         return ClientboundBlockEntityDataPacket.create(this, (blockEntity, registryAccess) ->
         {
            CompoundTag tag = new CompoundTag();
-           this.writeCustomTag(tag, true);
+           this.writeCustomTag(tag, registryAccess,true);
            return tag;
         });
     }
 
     @Override
-    public void onDataPacket(@NotNull Connection net, @NotNull ClientboundBlockEntityDataPacket pkt, HolderLookup.@NotNull Provider lookupProvider)
+    public void onDataPacket(@NotNull Connection net, @NotNull ClientboundBlockEntityDataPacket pkt, HolderLookup.@NotNull Provider registries)
     {
         CompoundTag nonNullTag = pkt.getTag();
-        this.readCustomTag(nonNullTag, true);
+        this.readCustomTag(nonNullTag, registries, true);
     }
 
     @Override
-    public void handleUpdateTag(@NotNull CompoundTag tag, HolderLookup.@NotNull Provider lookupProvider)
+    public void handleUpdateTag(@NotNull CompoundTag tag, HolderLookup.@NotNull Provider registries)
     {
-        this.readCustomTag(tag, true);
+        this.readCustomTag(tag, registries, true);
     }
 
     @Override
-    public @NotNull CompoundTag getUpdateTag(HolderLookup.@NotNull Provider pRegistries)
+    public @NotNull CompoundTag getUpdateTag(HolderLookup.@NotNull Provider registries)
     {
-        CompoundTag tag = super.getUpdateTag(pRegistries);
-        writeCustomTag(tag, true);
+        CompoundTag tag = super.getUpdateTag(registries);
+        writeCustomTag(tag, registries, true);
         return tag;
     }
 
