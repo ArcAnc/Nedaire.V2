@@ -13,7 +13,7 @@ package com.arcanc.nedaire.mixin;
 //@Mixin(value = GameData.class)
 public class EnergonTypesRightOrderLoadingMixin
 {
-/*    @Inject(method = "getRegistrationOrder", at = @At(value = "INVOKE", target = "Set:add"), remap = false)
+/*    @Inject(method = "getRegistrationOrder", at = @At(value = "INVOKE", target = "Ljava/util/Set;addAll(Ljava/util/Collection;)Z"), remap = false)
     private static void hookEnergonTypesOrder(CallbackInfoReturnable<Set<ResourceLocation>> cir)
     {
         Nedaire.getLogger().warn("TEST");

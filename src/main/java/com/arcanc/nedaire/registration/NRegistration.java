@@ -97,11 +97,11 @@ public class NRegistration
 
         public static final Registry<EnergonType> ENERGON_TYPES_BUILTIN = ENERGON_TYPES.makeRegistry(registryBuilder -> makeRegistry(registryBuilder, REGISTRY_ENERGON_TYPE));
 
-        public static final DeferredHolder<EnergonType, EnergonType> RED = registerType(NDatabase.CapabilitiesInfo.EnergonInfo.EnergonTypeInfo.RED, new Color(150, 19, 8, 255));
-        public static final DeferredHolder<EnergonType, EnergonType> DARK = registerType(NDatabase.CapabilitiesInfo.EnergonInfo.EnergonTypeInfo.DARK, new Color(56, 8, 84, 255));
-        public static final DeferredHolder<EnergonType, EnergonType> GREEN = registerType(NDatabase.CapabilitiesInfo.EnergonInfo.EnergonTypeInfo.GREEN, new Color(19, 82, 15, 255));
-        public static final DeferredHolder<EnergonType, EnergonType> YELLOW = registerType(NDatabase.CapabilitiesInfo.EnergonInfo.EnergonTypeInfo.YELLOW, new Color(215, 222, 16, 255));
-        public static final DeferredHolder<EnergonType, EnergonType> BLUE = registerType(NDatabase.CapabilitiesInfo.EnergonInfo.EnergonTypeInfo.BLUE, new Color(8, 93, 150, 255));
+        public static final DeferredHolder<EnergonType, EnergonType> RED = registerType(NDatabase.CapabilitiesInfo.EnergonInfo.EnergonTypeInfo.RED, new Color(255, 0, 0, 255));
+        public static final DeferredHolder<EnergonType, EnergonType> DARK = registerType(NDatabase.CapabilitiesInfo.EnergonInfo.EnergonTypeInfo.DARK, new Color(160, 64, 213, 255));
+        public static final DeferredHolder<EnergonType, EnergonType> GREEN = registerType(NDatabase.CapabilitiesInfo.EnergonInfo.EnergonTypeInfo.GREEN, new Color(0, 255, 0, 255));
+        public static final DeferredHolder<EnergonType, EnergonType> YELLOW = registerType(NDatabase.CapabilitiesInfo.EnergonInfo.EnergonTypeInfo.YELLOW, new Color(255, 255, 0, 255));
+        public static final DeferredHolder<EnergonType, EnergonType> BLUE = registerType(NDatabase.CapabilitiesInfo.EnergonInfo.EnergonTypeInfo.BLUE, new Color(0, 255, 255, 255));
 
         private static @NotNull DeferredHolder<EnergonType, EnergonType> registerType(String name, Color color)
         {
