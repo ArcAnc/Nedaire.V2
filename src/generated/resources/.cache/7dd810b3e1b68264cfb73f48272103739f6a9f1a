@@ -1,4 +1,7 @@
-// 1.21	2024-06-24T21:07:36.1092821	Nedaire Block States
-8d67d4c84d5a41c7ac503ff6677937ddfa1f08f4 assets/nedaire/blockstates/node_block.json
-29455176281c32d95d1ca4fd6bbe8fb912ce098e assets/nedaire/models/block/node_block.json
-01af1798e2f406e8fb3933db3a8d98b7a18c6cbd assets/nedaire/models/item/node_block.json
+// 1.21	2024-06-28T20:54:20.1194559	Nedaire Block States
+b3e05dc4d9cb035570f23256fd0d523d1d09177f assets/nedaire/blockstates/fluid_storage.json
+1e88bfc2f2bbfaee7c755a8219e2dce5240fec01 assets/nedaire/blockstates/node.json
+34d307f3658cc29a95ab026bcd350ff80095d84d assets/nedaire/models/block/fluid_storage.json
+a74b05ec7f7fcef5c4ecad1a625fc2b283cf0b15 assets/nedaire/models/block/node.json
+bc20cc74054c889bed63f44d9daaf0e50f9f01e4 assets/nedaire/models/item/fluid_storage.json
+8bbb22062a8e1136616eddb041e5f4555a22aec9 assets/nedaire/models/item/node.json

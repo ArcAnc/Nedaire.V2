@@ -9,7 +9,6 @@
 
 package com.arcanc.nedaire.content.block.block_entity;
 
-import com.arcanc.nedaire.Nedaire;
 import com.arcanc.nedaire.registration.NRegistration;
 import com.arcanc.nedaire.util.NDatabase;
 import com.arcanc.nedaire.util.inventory.fluids.SimpleFluidHandler;
@@ -46,8 +45,6 @@ public class NodeBlockEntity extends NBaseBlockEntity
     {
         if (getLevel().isClientSide())
             return;
-        Nedaire.getLogger().warn("On load starts");
-        Nedaire.getLogger().warn("Handler slots amount: {}", handler.getTanks());
         if (handler.getTanks() == 0)
         {
             RandomSource random = getLevel().random;
@@ -77,11 +74,6 @@ public class NodeBlockEntity extends NBaseBlockEntity
                         finishSlot();
             }
             markDirty();
-        }
-        Nedaire.getLogger().warn("Handler slots amount: {}", handler.getTanks());
-        for (int q = 0; q < handler.getTanks(); q++)
-        {
-            Nedaire.getLogger().warn("At slot {} contaning liquid: {}", q, handler.getFluidInTank(q).getFluid().getFluidType().getDescription());
         }
     }
 

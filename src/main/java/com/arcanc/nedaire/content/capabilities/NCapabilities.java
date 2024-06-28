@@ -11,7 +11,10 @@ package com.arcanc.nedaire.content.capabilities;
 
 import com.arcanc.nedaire.util.NDatabase;
 import com.arcanc.nedaire.util.inventory.items.ItemCapabilityAccess;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.neoforged.neoforge.capabilities.BlockCapability;
+import net.neoforged.neoforge.capabilities.ICapabilityProvider;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.items.IItemHandler;
 import org.jetbrains.annotations.NotNull;

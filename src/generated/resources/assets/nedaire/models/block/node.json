@@ -2,7 +2,7 @@
   "parent": "minecraft:block/cube_all",
   "render_type": "minecraft:solid",
   "textures": {
-    "all": "nedaire:block/node_block",
-    "particle": "nedaire:block/node_block"
+    "all": "nedaire:block/node",
+    "particle": "nedaire:block/node"
   }
 }

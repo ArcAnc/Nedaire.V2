@@ -104,11 +104,11 @@ public class FluidStackHolder implements IFluidTank
 
         if (stack.getAmount() < filled)
         {
-            fluid.setAmount(fluid.getAmount() + stack.getAmount());
+            setAmount(fluid.getAmount() + stack.getAmount());
             filled = stack.getAmount();
         }
         else
-            fluid.setAmount(capacity);
+            setAmount(capacity);
         return filled;
     }
 

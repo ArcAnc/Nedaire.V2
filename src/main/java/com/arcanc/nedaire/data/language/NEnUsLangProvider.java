@@ -30,6 +30,8 @@ public class NEnUsLangProvider extends LanguageProvider
 		addItem(NRegistration.NFluids.ENERGON_YELLOW.bucket(),   "Yellow Energon Bucket");
 		addItem(NRegistration.NFluids.ENERGON_GREEN.bucket(),  "Green Energon Bucket");
 		addItem(NRegistration.NFluids.ENERGON_BLUE.bucket(),  "Blue Energon Bucket");
+
+		addBlock(NRegistration.NBlocks.FLUID_STORAGE_BLOCK,  "Fluid Storage");
 	}
 	
 

@@ -9,8 +9,10 @@
 
 package com.arcanc.nedaire.registration;
 
+import com.arcanc.nedaire.content.block.FluidStorageBlock;
 import com.arcanc.nedaire.content.block.NBlockBase;
 import com.arcanc.nedaire.content.block.NodeBlock;
+import com.arcanc.nedaire.content.block.block_entity.FluidStorageBlockEntity;
 import com.arcanc.nedaire.content.block.block_entity.NodeBlockEntity;
 import com.arcanc.nedaire.content.capabilities.energon.EnergonType;
 import com.arcanc.nedaire.content.fluid.NEnergonFluidType;
@@ -119,12 +121,21 @@ public class NRegistration
     {
         public static final DeferredRegister.Blocks BLOCKS = DeferredRegister.createBlocks(NDatabase.MOD_ID);
 
+        private static final Supplier<BlockBehaviour.Properties> defaultProps = () -> BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK);
+
         public static final BlockRegObject<NodeBlock, NBaseBlockItem> NODE_BLOCK = new BlockRegObject<>(
-                "node_block",
+                NDatabase.BlocksInfo.Names.NODE,
                 () -> BlockBehaviour.Properties.of().noOcclusion().noCollission().noLootTable(),
                 NodeBlock :: new,
                 Item.Properties::new,
                 NBaseBlockItem :: new);
+
+        public static final BlockRegObject<FluidStorageBlock, NBaseBlockItem> FLUID_STORAGE_BLOCK = new BlockRegObject<>(
+                NDatabase.BlocksInfo.Names.FLUID_STORAGE,
+                () -> defaultProps.get().noOcclusion(),
+                FluidStorageBlock::new,
+                Item.Properties :: new,
+                NBaseBlockItem::new);
 
         public static class BlockRegObject<T extends Block, I extends Item> implements Supplier<T>, ItemLike
         {
@@ -238,7 +249,10 @@ public class NRegistration
                 BuiltInRegistries.BLOCK_ENTITY_TYPE, NDatabase.MOD_ID);
 
         public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<NodeBlockEntity>> BE_NODE = BLOCK_ENTITIES.register(
-                "node", makeType(NodeBlockEntity :: new, NBlocks.NODE_BLOCK));
+                NDatabase.BlocksInfo.Names.NODE, makeType(NodeBlockEntity :: new, NBlocks.NODE_BLOCK));
+
+        public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<FluidStorageBlockEntity>> BE_FLUID_STORAGE = BLOCK_ENTITIES.register(
+                NDatabase.BlocksInfo.Names.FLUID_STORAGE, makeType(FluidStorageBlockEntity::new, NBlocks.FLUID_STORAGE_BLOCK));
 
         public static <T extends BlockEntity> Supplier<BlockEntityType<T>> makeType(BlockEntityType.BlockEntitySupplier<T> create, Supplier<? extends Block> valid)
         {

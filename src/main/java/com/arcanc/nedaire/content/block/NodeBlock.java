@@ -10,29 +10,25 @@
 package com.arcanc.nedaire.content.block;
 
 import com.arcanc.nedaire.content.block.block_entity.NodeBlockEntity;
+import com.arcanc.nedaire.registration.NRegistration;
+import com.arcanc.nedaire.util.inventory.fluids.SimpleFluidHandler;
 import com.mojang.serialization.MapCodec;
-import net.minecraft.core.BlockPos;
+import mcjty.theoneprobe.api.*;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-public class NodeBlock extends NBlockBase implements EntityBlock
+public class NodeBlock extends NBaseEntityBlock<NodeBlockEntity> implements IProbeInfoAccessor
 {
-    public static final MapCodec<NodeBlock> CODEC = simpleCodec(NodeBlock::new);
+    public static final MapCodec<NodeBlock> CODEC = simpleCodec(NodeBlock :: new);
 
-    public NodeBlock(Properties props)
+    public NodeBlock(Properties blockProps)
     {
-        super(props);
-    }
-
-    @Nullable
-    @Override
-    public BlockEntity newBlockEntity(@NotNull BlockPos pPos, @NotNull BlockState pState)
-    {
-        return new NodeBlockEntity(pPos, pState);
+        super(NRegistration.NBlockEntities.BE_NODE, blockProps);
     }
 
     @SuppressWarnings("deprecation")
@@ -45,5 +41,25 @@ public class NodeBlock extends NBlockBase implements EntityBlock
     protected @NotNull MapCodec<NodeBlock> codec()
     {
         return CODEC;
+    }
+
+    @Override
+    public void addProbeInfo(ProbeMode probeMode, IProbeInfo iProbeInfo, Player player, @NotNull Level level, BlockState blockState, @NotNull IProbeHitData iProbeHitData)
+    {
+        BlockEntity tile = level.getBlockEntity(iProbeHitData.getPos());
+        if (tile instanceof NodeBlockEntity be)
+        {
+            SimpleFluidHandler handler = be.getHandler(null);
+
+            TankReference[] references = TankReference.createSplitHandler(handler);
+
+            for (TankReference ref : references)
+            {
+                iProbeInfo.tank(ref, iProbeInfo.
+                        defaultProgressStyle().
+                        alignment(ElementAlignment.ALIGN_CENTER).
+                        suffix(" | %s EE", ref.getCapacity()));
+            }
+        }
     }
 }

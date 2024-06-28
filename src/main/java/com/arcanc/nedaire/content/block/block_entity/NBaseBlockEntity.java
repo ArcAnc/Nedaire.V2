@@ -38,13 +38,13 @@ public abstract class NBaseBlockEntity extends BlockEntity
     public abstract void readCustomTag(@NotNull CompoundTag tag, HolderLookup.@NotNull Provider registries, boolean descrPacket);
 
     @Override
-    protected void saveAdditional(@NotNull CompoundTag pTag, HolderLookup.@NotNull Provider registries)
+    protected void saveAdditional(@NotNull CompoundTag tag, HolderLookup.@NotNull Provider registries)
     {
-        super.saveAdditional(pTag, registries);
-        this.writeCustomTag(pTag, registries,false);
+        super.saveAdditional(tag, registries);
+        this.writeCustomTag(tag, registries,false);
     }
 
-    public abstract void writeCustomTag(@NotNull CompoundTag pTag, HolderLookup.@NotNull Provider pRegistries, boolean descrPacker);
+    public abstract void writeCustomTag(@NotNull CompoundTag tag, HolderLookup.@NotNull Provider registries, boolean descrPacker);
 
     @Override
     public ClientboundBlockEntityDataPacket getUpdatePacket()

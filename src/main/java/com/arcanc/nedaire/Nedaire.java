@@ -10,9 +10,10 @@
 package com.arcanc.nedaire;
 
 
+import com.arcanc.nedaire.content.block.ber.FluidStorageRenderer;
 import com.arcanc.nedaire.content.block.ber.NodeRenderer;
+import com.arcanc.nedaire.content.block.block_entity.FluidStorageBlockEntity;
 import com.arcanc.nedaire.content.block.block_entity.NodeBlockEntity;
-import com.arcanc.nedaire.content.capabilities.NCapabilities;
 import com.arcanc.nedaire.content.fluid.NEnergonFluidType;
 import com.arcanc.nedaire.content.gui.container_menu.NContainerMenu;
 import com.arcanc.nedaire.content.gui.nerwork.messages.NetworkEngine;
@@ -58,8 +59,6 @@ public class Nedaire
     {
         NRegistration.init(modEventBus);
 
-        modEventBus.addListener(NCapabilities :: registerCapabilities);
-
         setupEvents(modEventBus);
     }
 
@@ -88,6 +87,7 @@ public class Nedaire
                 map(DeferredHolder :: get).forEach(item -> event.registerItem(Capabilities.FluidHandler.ITEM, (stack, ctx) -> new FluidBucketWrapper(stack), item));
 
         event.registerBlockEntity(Capabilities.FluidHandler.BLOCK, NRegistration.NBlockEntities.BE_NODE.get(), NodeBlockEntity::getHandler);
+        event.registerBlockEntity(Capabilities.FluidHandler.BLOCK, NRegistration.NBlockEntities.BE_FLUID_STORAGE.get(), FluidStorageBlockEntity::getHandler);
     }
 
     private void registerNetwork(final @NotNull IEventBus modEventBus)
@@ -103,7 +103,8 @@ public class Nedaire
 
     private void registerBlockEntityRenderers(final EntityRenderersEvent.@NotNull RegisterRenderers event)
     {
-        event.registerBlockEntityRenderer(NRegistration.NBlockEntities.BE_NODE.get(), NodeRenderer::new);
+        event.registerBlockEntityRenderer(NRegistration.NBlockEntities.BE_NODE.get(), NodeRenderer :: new);
+        event.registerBlockEntityRenderer(NRegistration.NBlockEntities.BE_FLUID_STORAGE.get(), FluidStorageRenderer :: new);
     }
 
     private void commonSetup(final FMLCommonSetupEvent event)
@@ -144,7 +145,7 @@ public class Nedaire
                 NRegistration.NFluids.ENERGON_YELLOW.bucket().get());
     }
 
-    public void gatherData(final @NotNull GatherDataEvent event)
+    private void gatherData(final @NotNull GatherDataEvent event)
     {
         ExistingFileHelper ext = event.getExistingFileHelper();
         DataGenerator gen = event.getGenerator();

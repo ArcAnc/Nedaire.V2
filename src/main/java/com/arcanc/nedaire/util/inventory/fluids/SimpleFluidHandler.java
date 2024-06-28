@@ -124,6 +124,12 @@ public class SimpleFluidHandler implements IFluidHandler, INBTSerializable<Compo
         return this.tanks.get(slot).isFluidValid(stack);
     }
 
+    public FluidStackHolder getTank(int slot)
+    {
+        validateSlotIndex(slot);
+        return this.tanks.get(slot);
+    }
+
     @Override
     public @UnknownNullability CompoundTag serializeNBT(HolderLookup.@NotNull Provider provider)
     {

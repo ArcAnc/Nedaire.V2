@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "nedaire:block/fluid_storage"
+    }
+  }
+}

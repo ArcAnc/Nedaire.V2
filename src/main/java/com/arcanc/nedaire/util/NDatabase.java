@@ -19,6 +19,16 @@ public class NDatabase
     public static final String MOD_ID = "nedaire";
     public static final String MOD_VERSION = "0.0.0";
 
+    public static final class BlocksInfo
+    {
+        public static final class Names
+        {
+            public static final String NODE = "node";
+
+            public static final String FLUID_STORAGE = "fluid_storage";
+        }
+    }
+
     public static final class FluidsInfo
     {
         public static class Names
