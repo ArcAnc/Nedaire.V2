@@ -50,12 +50,9 @@ public class FluidStorageBlock extends NBaseEntityBlock<FluidStorageBlockEntity>
                                                        @NotNull InteractionHand hand,
                                                        @NotNull BlockHitResult hitResult)
     {
-        if (!level.isClientSide())
+        if(FluidUtil.interactWithFluidHandler(player, hand, level, pos, hitResult.getDirection()))
         {
-            if(FluidUtil.interactWithFluidHandler(player, hand, level, pos, hitResult.getDirection()))
-            {
-                return ItemInteractionResult.SUCCESS;
-            }
+            return ItemInteractionResult.sidedSuccess(level.isClientSide());
         }
         return super.useItemOn(stack, state, level, pos, player, hand, hitResult);
     }
