@@ -121,4 +121,10 @@ public class NBlockBase extends Block implements SimpleWaterloggedBlock
         }
         return ItemStack.EMPTY;
     }
+
+    protected void dropBlock(@NotNull Level level, BlockPos pos)
+    {
+        level.destroyBlock(pos, true);
+        level.sendBlockUpdated(pos, defaultBlockState(), level.getBlockState(pos), UPDATE_ALL);
+    }
 }

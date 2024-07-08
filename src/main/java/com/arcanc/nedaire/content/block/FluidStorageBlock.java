@@ -11,6 +11,8 @@ package com.arcanc.nedaire.content.block;
 
 import com.arcanc.nedaire.content.block.block_entity.FluidStorageBlockEntity;
 import com.arcanc.nedaire.registration.NRegistration;
+import com.arcanc.nedaire.util.Upgrade;
+import com.arcanc.nedaire.util.helpers.BlockHelper;
 import com.arcanc.nedaire.util.inventory.fluids.SimpleFluidHandler;
 import com.mojang.serialization.MapCodec;
 import mcjty.theoneprobe.api.*;
@@ -24,6 +26,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -39,6 +42,22 @@ public class FluidStorageBlock extends NBaseEntityBlock<FluidStorageBlockEntity>
     public FluidStorageBlock(Properties props)
     {
         super (NRegistration.NBlockEntities.BE_FLUID_STORAGE, props);
+    }
+
+    @Override
+    protected BlockState getInitDefaultState()
+    {
+        BlockState state = super.getInitDefaultState();
+
+        if (state.hasProperty(BlockHelper.BlockProperties.UPGRADE_LEVEL))
+            state.setValue(BlockHelper.BlockProperties.UPGRADE_LEVEL, Upgrade.SPARK.getLvl());
+        return state;
+    }
+
+    @Override
+    protected void createBlockStateDefinition(StateDefinition.@NotNull Builder<Block, BlockState> builder)
+    {
+        builder.add(BlockHelper.BlockProperties.WATERLOGGED, BlockHelper.BlockProperties.UPGRADE_LEVEL);
     }
 
     @Override

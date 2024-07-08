@@ -9,25 +9,28 @@
 
 package com.arcanc.nedaire.registration;
 
+import com.arcanc.nedaire.api.EnergonType;
 import com.arcanc.nedaire.content.block.FluidStorageBlock;
+import com.arcanc.nedaire.content.block.FluidTransmitterBlock;
 import com.arcanc.nedaire.content.block.NBlockBase;
 import com.arcanc.nedaire.content.block.NodeBlock;
 import com.arcanc.nedaire.content.block.block_entity.FluidStorageBlockEntity;
+import com.arcanc.nedaire.content.block.block_entity.FluidTransmitterBlockEntity;
 import com.arcanc.nedaire.content.block.block_entity.NodeBlockEntity;
-import com.arcanc.nedaire.content.capabilities.energon.EnergonType;
 import com.arcanc.nedaire.content.fluid.NEnergonFluidType;
 import com.arcanc.nedaire.content.fluid.NFluid;
 import com.arcanc.nedaire.content.fluid.NFluidType;
 import com.arcanc.nedaire.content.gui.container_menu.NContainerMenu;
-import com.arcanc.nedaire.content.items.ItemInterfaces;
-import com.arcanc.nedaire.content.items.NBaseBlockItem;
-import com.arcanc.nedaire.content.items.NBucketItem;
+import com.arcanc.nedaire.content.items.*;
 import com.arcanc.nedaire.util.NDatabase;
+import com.arcanc.nedaire.util.Upgrade;
 import com.arcanc.nedaire.util.helpers.BlockHelper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import net.minecraft.Util;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Registry;
+import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -80,6 +83,7 @@ public class NRegistration
 
     public static void init(final IEventBus modEventBus)
     {
+        NRegistration.NDataComponents.init(modEventBus);
         NRegistration.NEnergonTypes.init(modEventBus);
         NRegistration.NBlocks.init(modEventBus);
         NRegistration.NItems.init(modEventBus);
@@ -89,6 +93,19 @@ public class NRegistration
         NRegistration.NCreativeTabs.init(modEventBus);
         //custom registries
         NRegistration.NMultiblocks.init(modEventBus);
+    }
+
+    public static final class NDataComponents
+    {
+        public static final DeferredRegister.DataComponents DATA_COMPONENTS = DeferredRegister.createDataComponents(NDatabase.MOD_ID);
+
+        public static final DeferredHolder<DataComponentType<?>, DataComponentType<BlockPos>> POSITION = DATA_COMPONENTS.registerComponentType(NDatabase.DataComponentsInfo.BLOCK_POS,
+                builder -> builder.persistent(BlockPos.CODEC).networkSynchronized(BlockPos.STREAM_CODEC).cacheEncoding());
+
+        public static void init(final IEventBus modEventBus)
+        {
+            DATA_COMPONENTS.register(modEventBus);
+        }
     }
 
     public static final class NEnergonTypes
@@ -136,6 +153,14 @@ public class NRegistration
                 FluidStorageBlock::new,
                 Item.Properties :: new,
                 NBaseBlockItem::new);
+
+        public static final BlockRegObject<FluidTransmitterBlock, NBaseBlockItem> FLUID_TRANSMITTER_BLOCK = new BlockRegObject<>(
+                NDatabase.BlocksInfo.Names.FLUID_TRANSMITTER,
+                () -> defaultProps.get().noOcclusion(),
+                FluidTransmitterBlock :: new,
+                Item.Properties :: new,
+                NBaseBlockItem :: new
+        );
 
         public static class BlockRegObject<T extends Block, I extends Item> implements Supplier<T>, ItemLike
         {
@@ -214,7 +239,27 @@ public class NRegistration
     {
         public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(NDatabase.MOD_ID);
 
-        protected static final Supplier<Item.Properties> baseProps = Item.Properties::new;
+        private static final Supplier<Item.Properties> baseProps = Item.Properties::new;
+
+        public static final DeferredHolder<Item, WrenchItem> WRENCH = ITEMS.register(NDatabase.ItemsInfo.Names.WRENCH,
+                () -> new WrenchItem(baseProps.get().stacksTo(1)));
+
+        public static final DeferredHolder<Item, UpgradeItem> SPARK = registerUpgrade(Upgrade.SPARK);
+
+        public static final DeferredHolder<Item, UpgradeItem> STREAM = registerUpgrade(Upgrade.STREAM);
+
+        public static final DeferredHolder<Item, UpgradeItem> STORM = registerUpgrade(Upgrade.STORM);
+
+        public static final DeferredHolder<Item, UpgradeItem> NOVA = registerUpgrade(Upgrade.NOVA);
+
+        public static final DeferredHolder<Item, UpgradeItem> CREATIVE = registerUpgrade(Upgrade.CREATIVE);
+
+
+        private static @NotNull DeferredHolder<Item, UpgradeItem> registerUpgrade (@NotNull Upgrade lvl)
+        {
+            return ITEMS.register(NDatabase.ItemsInfo.Names.UPGRADE + "_" + lvl.getName(),
+                    () -> new UpgradeItem(lvl, baseProps.get()));
+        }
 
         @SuppressWarnings("deprecation")
         public static @Nonnull Supplier<Item.Properties> copyProps(@Nonnull Item itemBlock)
@@ -254,12 +299,16 @@ public class NRegistration
         public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<FluidStorageBlockEntity>> BE_FLUID_STORAGE = BLOCK_ENTITIES.register(
                 NDatabase.BlocksInfo.Names.FLUID_STORAGE, makeType(FluidStorageBlockEntity::new, NBlocks.FLUID_STORAGE_BLOCK));
 
-        public static <T extends BlockEntity> Supplier<BlockEntityType<T>> makeType(BlockEntityType.BlockEntitySupplier<T> create, Supplier<? extends Block> valid)
+        public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<FluidTransmitterBlockEntity>> BE_FLUID_TRANSMITTER = BLOCK_ENTITIES.register(
+                NDatabase.BlocksInfo.Names.FLUID_TRANSMITTER, makeType(FluidTransmitterBlockEntity::new, NBlocks.FLUID_TRANSMITTER_BLOCK));
+
+        public static <T extends BlockEntity> @NotNull Supplier<BlockEntityType<T>> makeType(BlockEntityType.BlockEntitySupplier<T> create, Supplier<? extends Block> valid)
         {
             return makeTypeMultipleBlocks(create, ImmutableSet.of(valid));
         }
 
-        public static <T extends BlockEntity> Supplier<BlockEntityType<T>> makeTypeMultipleBlocks(
+
+        public static <T extends BlockEntity> @NotNull Supplier<BlockEntityType<T>> makeTypeMultipleBlocks(
                 BlockEntityType.BlockEntitySupplier<T> create, Collection<? extends Supplier<? extends Block>> valid
         )
         {

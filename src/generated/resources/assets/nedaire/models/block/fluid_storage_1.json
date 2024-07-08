@@ -149,9 +149,9 @@
   ],
   "render_type": "minecraft:cutout",
   "textures": {
-    "glass": "nedaire:block/fluid_storage/fluid_storage_glass",
-    "particle": "nedaire:block/fluid_storage/fluid_storage_glass",
+    "glass": "nedaire:block/fluid_storage/glass_1",
+    "particle": "nedaire:block/fluid_storage/glass_1",
     "port": "nedaire:block/port",
-    "updown": "nedaire:block/fluid_storage/fluid_storage_updown"
+    "updown": "nedaire:block/fluid_storage/updown"
   }
 }

@@ -9,7 +9,7 @@
 
 package com.arcanc.nedaire.content.fluid;
 
-import com.arcanc.nedaire.content.capabilities.energon.EnergonType;
+import com.arcanc.nedaire.api.EnergonType;
 import com.arcanc.nedaire.util.helpers.RenderHelper;
 import com.mojang.blaze3d.shaders.FogShape;
 import com.mojang.blaze3d.systems.RenderSystem;

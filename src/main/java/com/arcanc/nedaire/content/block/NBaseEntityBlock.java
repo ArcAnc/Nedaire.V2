@@ -18,9 +18,7 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -84,24 +82,31 @@ public class NBaseEntityBlock<T extends BlockEntity> extends NBlockBase implemen
                                                        @NotNull InteractionHand pHand,
                                                        @NotNull BlockHitResult pHitResult)
     {
-        ItemInteractionResult result = super.useItemOn(pStack, pState, pLevel, pPos, pPlayer, pHand, pHitResult);
-        if (result.consumesAction())
-            return result;
-        BlockEntity tile = pLevel.getBlockEntity(pPos);
-        if (tile instanceof BlockInterfaces.INWrencheble interaction)
+        /*if (tile instanceof BlockInterfaces.INWrencheble interaction)
         {
             ItemInteractionResult res = interaction.onUsed(pStack, pState, pLevel, pPos, pPlayer, pHand, pHitResult);
             if (res.consumesAction() || res == ItemInteractionResult.FAIL)
                 return res;
-        }
-        if(tile instanceof MenuProvider menuProvider && pHand == InteractionHand.MAIN_HAND && ! pPlayer.isShiftKeyDown())
+        }*/
+        return super.useItemOn(pStack, pState, pLevel, pPos, pPlayer, pHand, pHitResult);
+    }
+
+    @Override
+    protected @NotNull InteractionResult useWithoutItem(@NotNull BlockState state,
+                                                        @NotNull Level level,
+                                                        @NotNull BlockPos pos,
+                                                        @NotNull Player player,
+                                                        @NotNull BlockHitResult hitResult)
+    {
+        BlockEntity tile = level.getBlockEntity(pos);
+        if(tile instanceof MenuProvider menuProvider && !player.isShiftKeyDown())
         {
-            if(pPlayer instanceof ServerPlayer serverPlayer)
+            if(player instanceof ServerPlayer serverPlayer)
             {
                 if(menuProvider instanceof BlockInterfaces.INInteractionObject<?> interaction)
                 {
                     interaction = interaction.getGuiMaster();
-                    if(interaction != null && interaction.canUseGui(pPlayer))
+                    if(interaction != null && interaction.canUseGui(player))
                     {
                         serverPlayer.openMenu(interaction);
                     }
@@ -109,9 +114,9 @@ public class NBaseEntityBlock<T extends BlockEntity> extends NBlockBase implemen
                 else
                     serverPlayer.openMenu(menuProvider);
             }
-            return ItemInteractionResult.SUCCESS;
+            return InteractionResult.SUCCESS;
         }
-        return result;
+        return super.useWithoutItem(state, level, pos, player, hitResult);
     }
 
     private BEClassInspectedData getClassData()

@@ -7,7 +7,7 @@
  * Details can be found in the license file in the root folder of this project
  */
 
-package com.arcanc.nedaire.content.capabilities.energon;
+package com.arcanc.nedaire.api;
 
 import org.jetbrains.annotations.NotNull;
 

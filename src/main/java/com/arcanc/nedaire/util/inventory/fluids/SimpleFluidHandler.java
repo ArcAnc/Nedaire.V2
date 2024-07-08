@@ -117,6 +117,18 @@ public class SimpleFluidHandler implements IFluidHandler, INBTSerializable<Compo
         return this.tanks.get(slot).getCapacity();
     }
 
+    public void setTanksCapacity(int newCapacity)
+    {
+        this.tanks.forEach(fluidStackHolder ->
+        {
+            if (newCapacity > fluidStackHolder.getCapacity())
+            {
+                fluidStackHolder.capacity = newCapacity;
+                fluidStackHolder.update();
+            }
+        });
+    }
+
     @Override
     public boolean isFluidValid(int slot, @NotNull FluidStack stack)
     {

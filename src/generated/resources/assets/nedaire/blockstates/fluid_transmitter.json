@@ -1,0 +1,108 @@
+{
+  "variants": {
+    "enabled=false,facing=down,waterlogged=false": {
+      "model": "nedaire:block/fluid_transmitter_dis"
+    },
+    "enabled=false,facing=down,waterlogged=true": {
+      "model": "nedaire:block/fluid_transmitter_dis"
+    },
+    "enabled=false,facing=east,waterlogged=false": {
+      "model": "nedaire:block/fluid_transmitter_dis",
+      "x": 90,
+      "y": 270
+    },
+    "enabled=false,facing=east,waterlogged=true": {
+      "model": "nedaire:block/fluid_transmitter_dis",
+      "x": 90,
+      "y": 270
+    },
+    "enabled=false,facing=north,waterlogged=false": {
+      "model": "nedaire:block/fluid_transmitter_dis",
+      "x": 90,
+      "y": 180
+    },
+    "enabled=false,facing=north,waterlogged=true": {
+      "model": "nedaire:block/fluid_transmitter_dis",
+      "x": 90,
+      "y": 180
+    },
+    "enabled=false,facing=south,waterlogged=false": {
+      "model": "nedaire:block/fluid_transmitter_dis",
+      "x": 90
+    },
+    "enabled=false,facing=south,waterlogged=true": {
+      "model": "nedaire:block/fluid_transmitter_dis",
+      "x": 90
+    },
+    "enabled=false,facing=up,waterlogged=false": {
+      "model": "nedaire:block/fluid_transmitter_dis",
+      "x": 180
+    },
+    "enabled=false,facing=up,waterlogged=true": {
+      "model": "nedaire:block/fluid_transmitter_dis",
+      "x": 180
+    },
+    "enabled=false,facing=west,waterlogged=false": {
+      "model": "nedaire:block/fluid_transmitter_dis",
+      "x": 90,
+      "y": 90
+    },
+    "enabled=false,facing=west,waterlogged=true": {
+      "model": "nedaire:block/fluid_transmitter_dis",
+      "x": 90,
+      "y": 90
+    },
+    "enabled=true,facing=down,waterlogged=false": {
+      "model": "nedaire:block/fluid_transmitter"
+    },
+    "enabled=true,facing=down,waterlogged=true": {
+      "model": "nedaire:block/fluid_transmitter"
+    },
+    "enabled=true,facing=east,waterlogged=false": {
+      "model": "nedaire:block/fluid_transmitter",
+      "x": 90,
+      "y": 270
+    },
+    "enabled=true,facing=east,waterlogged=true": {
+      "model": "nedaire:block/fluid_transmitter",
+      "x": 90,
+      "y": 270
+    },
+    "enabled=true,facing=north,waterlogged=false": {
+      "model": "nedaire:block/fluid_transmitter",
+      "x": 90,
+      "y": 180
+    },
+    "enabled=true,facing=north,waterlogged=true": {
+      "model": "nedaire:block/fluid_transmitter",
+      "x": 90,
+      "y": 180
+    },
+    "enabled=true,facing=south,waterlogged=false": {
+      "model": "nedaire:block/fluid_transmitter",
+      "x": 90
+    },
+    "enabled=true,facing=south,waterlogged=true": {
+      "model": "nedaire:block/fluid_transmitter",
+      "x": 90
+    },
+    "enabled=true,facing=up,waterlogged=false": {
+      "model": "nedaire:block/fluid_transmitter",
+      "x": 180
+    },
+    "enabled=true,facing=up,waterlogged=true": {
+      "model": "nedaire:block/fluid_transmitter",
+      "x": 180
+    },
+    "enabled=true,facing=west,waterlogged=false": {
+      "model": "nedaire:block/fluid_transmitter",
+      "x": 90,
+      "y": 90
+    },
+    "enabled=true,facing=west,waterlogged=true": {
+      "model": "nedaire:block/fluid_transmitter",
+      "x": 90,
+      "y": 90
+    }
+  }
+}

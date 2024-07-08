@@ -10,35 +10,35 @@
 package com.arcanc.nedaire.content.block;
 
 import com.arcanc.nedaire.registration.NRegistration;
+import com.arcanc.nedaire.util.Upgrade;
 import com.google.common.base.Preconditions;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.ItemInteractionResult;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.BlockHitResult;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class BlockInterfaces
 {
-    public interface INWrencheble
+    public interface INWrencheable
     {
-        ItemInteractionResult onUsed(@NotNull ItemStack pStack,
-                                     @NotNull BlockState pState,
-                                     @NotNull Level pLevel,
-                                     @NotNull BlockPos pPos,
-                                     @NotNull Player pPlayer,
-                                     @NotNull InteractionHand pHand,
-                                     @NotNull BlockHitResult pHitResult);
+        InteractionResult onUsed(@NotNull ItemStack stack, UseOnContext ctx);
+    }
+
+    public interface IUpgradeable
+    {
+        Upgrade getUpgrade();
+
+        boolean applyUpgrade(Upgrade upg);
     }
 
     public interface IColoredBlock

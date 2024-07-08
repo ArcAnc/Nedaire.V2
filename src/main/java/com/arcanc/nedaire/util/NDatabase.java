@@ -19,13 +19,43 @@ public class NDatabase
     public static final String MOD_ID = "nedaire";
     public static final String MOD_VERSION = "0.0.0";
 
+    public static final class DataComponentsInfo
+    {
+        public static final String BLOCK_POS = "block_pos";
+    }
+
     public static final class BlocksInfo
     {
         public static final class Names
         {
             public static final String NODE = "node";
+            public static final class NodeTypesInfo
+            {
+                public static final String STANDARD = "standard";
+                public static final String PURE = "pure";
+                public static final String HUNGRY = "hungry";
+                public static final String UNSTABLE = "unstable";
 
+                public static final class Modifier
+                {
+                    public static final String NORMAL = "normal";
+                    public static final String BRIGHT = "bright";
+                    public static final String PALE = "pale";
+                    public static final String FADING = "fading";
+                }
+            }
+
+            public static final String FLUID_TRANSMITTER = "fluid_transmitter";
             public static final String FLUID_STORAGE = "fluid_storage";
+        }
+    }
+
+    public static final class ItemsInfo
+    {
+        public static final class Names
+        {
+            public static final String WRENCH = "wrench";
+            public static final String UPGRADE = "upgrade";
         }
     }
 
