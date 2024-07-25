@@ -10,7 +10,7 @@
 package com.arcanc.nedaire.content.gui.container_menu;
 
 import com.arcanc.nedaire.content.block.block_entity.NBaseBlockEntity;
-import com.arcanc.nedaire.content.gui.nerwork.messages.S2CMessageContainerData;
+import com.arcanc.nedaire.content.nerwork.messages.packets.S2CPacketContainerData;
 import com.arcanc.nedaire.content.gui.sync.GenericContainerData;
 import com.arcanc.nedaire.content.gui.sync.GenericDataSerializers;
 import com.mojang.datafixers.util.Pair;
@@ -65,7 +65,7 @@ public abstract class NContainerMenu extends AbstractContainerMenu implements IS
         }
         if(!toSync.isEmpty())
             for(ServerPlayer player : usingPlayers)
-                player.connection.send(new S2CMessageContainerData(toSync));
+                player.connection.send(new S2CPacketContainerData(toSync));
     }
 
     public void receiveSync (@NotNull List<Pair<Integer, GenericDataSerializers.DataPair<?>>> synced)
@@ -150,7 +150,7 @@ public abstract class NContainerMenu extends AbstractContainerMenu implements IS
             List<Pair<Integer, GenericDataSerializers.DataPair<?>>> list = new ArrayList<>();
             for(int i = 0; i < ieContainer.genericData.size(); i++)
                 list.add(Pair.of(i, ieContainer.genericData.get(i).dataPair()));
-            serverPlayer.connection.send(new S2CMessageContainerData(list));
+            serverPlayer.connection.send(new S2CPacketContainerData(list));
         }
     }
 

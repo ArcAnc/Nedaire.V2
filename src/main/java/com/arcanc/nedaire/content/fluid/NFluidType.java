@@ -16,6 +16,7 @@ import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.FogRenderer;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.client.extensions.common.IClientFluidTypeExtensions;
+import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent;
 import net.neoforged.neoforge.fluids.FluidType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -43,10 +44,9 @@ public class NFluidType extends FluidType
         this.fogColor = fogColor;
     }
 
-    @Override
-    public void initializeClient(@NotNull Consumer<IClientFluidTypeExtensions> consumer)
+    public IClientFluidTypeExtensions registerClientExtensions()
     {
-        consumer.accept(new IClientFluidTypeExtensions()
+        return new IClientFluidTypeExtensions()
         {
             @Override
             public @NotNull ResourceLocation getStillTexture()
@@ -84,7 +84,7 @@ public class NFluidType extends FluidType
                 RenderSystem.setShaderFogStart(1f);
                 RenderSystem.setShaderFogEnd(6f); // distance when the fog starts
             }
-        });
+        };
     }
 
     public ResourceLocation getStillTexture()

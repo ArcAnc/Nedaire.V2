@@ -1,34 +1,7 @@
 {
   "variants": {
-    "upgrade_lvl=0,waterlogged=false": {
-      "model": "nedaire:block/fluid_storage_0"
-    },
-    "upgrade_lvl=0,waterlogged=true": {
-      "model": "nedaire:block/fluid_storage_0"
-    },
-    "upgrade_lvl=1,waterlogged=false": {
-      "model": "nedaire:block/fluid_storage_1"
-    },
-    "upgrade_lvl=1,waterlogged=true": {
-      "model": "nedaire:block/fluid_storage_1"
-    },
-    "upgrade_lvl=2,waterlogged=false": {
-      "model": "nedaire:block/fluid_storage_2"
-    },
-    "upgrade_lvl=2,waterlogged=true": {
-      "model": "nedaire:block/fluid_storage_2"
-    },
-    "upgrade_lvl=3,waterlogged=false": {
-      "model": "nedaire:block/fluid_storage_3"
-    },
-    "upgrade_lvl=3,waterlogged=true": {
-      "model": "nedaire:block/fluid_storage_3"
-    },
-    "upgrade_lvl=4,waterlogged=false": {
-      "model": "nedaire:block/fluid_storage_4"
-    },
-    "upgrade_lvl=4,waterlogged=true": {
-      "model": "nedaire:block/fluid_storage_4"
+    "": {
+      "model": "nedaire:block/fluid_storage"
     }
   }
 }

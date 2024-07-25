@@ -9,27 +9,29 @@
 
 package com.arcanc.nedaire.content.block.block_entity;
 
-import com.arcanc.nedaire.Nedaire;
 import com.arcanc.nedaire.content.block.BlockInterfaces;
 import com.arcanc.nedaire.registration.NRegistration;
 import com.arcanc.nedaire.util.NDatabase;
 import com.arcanc.nedaire.util.Upgrade;
-import com.arcanc.nedaire.util.helpers.BlockHelper;
 import com.arcanc.nedaire.util.inventory.fluids.SimpleFluidHandler;
 import com.arcanc.nedaire.util.inventory.fluids.TankType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.neoforge.client.model.data.ModelData;
+import net.neoforged.neoforge.client.model.data.ModelProperty;
 import org.jetbrains.annotations.NotNull;
 
 public class FluidStorageBlockEntity extends NBaseBlockEntity implements BlockInterfaces.IUpgradeable
 {
+
     private final int HANDLER_BASE_CAPACITY = 5000;
     protected SimpleFluidHandler handler;
     protected Upgrade upg = Upgrade.SPARK;
+
+    public static final ModelProperty<Upgrade> UPGRADE_MODEL_PROPERTY = new ModelProperty<>();
 
     public FluidStorageBlockEntity(BlockPos pos, BlockState state)
     {
@@ -75,13 +77,20 @@ public class FluidStorageBlockEntity extends NBaseBlockEntity implements BlockIn
     {
         if (getUpgrade().isLowerThan(upg))
         {
-            Nedaire.getLogger().warn("Upgrading!");
             this.upg = upg;
             this.handler.setTanksCapacity(HANDLER_BASE_CAPACITY * upg.getModifier());
-            level.setBlock(getBlockPos(), getBlockState().setValue(BlockHelper.BlockProperties.UPGRADE_LEVEL, upg.getLvl()), Block.UPDATE_ALL);
             this.markDirty();
+            requestModelDataUpdate();
             return true;
         }
         return false;
+    }
+
+    @Override
+    public @NotNull ModelData getModelData()
+    {
+        return ModelData.builder().
+                with(UPGRADE_MODEL_PROPERTY, this.upg).
+                build();
     }
 }

@@ -12,6 +12,7 @@ package com.arcanc.nedaire.content.block;
 import com.arcanc.nedaire.content.block.block_entity.FluidTransmitterBlockEntity;
 import com.arcanc.nedaire.registration.NRegistration;
 import com.arcanc.nedaire.util.helpers.BlockHelper;
+import com.arcanc.nedaire.util.helpers.FluidHelper;
 import com.arcanc.nedaire.util.helpers.VoxelShapeHelper;
 import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
@@ -32,7 +33,8 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.EnumMap;
+import java.util.Map;
 
 public class FluidTransmitterBlock extends NBaseEntityBlock<FluidTransmitterBlockEntity>
 {
@@ -67,9 +69,6 @@ public class FluidTransmitterBlock extends NBaseEntityBlock<FluidTransmitterBloc
         BY_DIRECTION.put(Direction.SOUTH, VoxelShapeHelper.rotateShape(Direction.DOWN, Direction.SOUTH, SHAPE));
         BY_DIRECTION.put(Direction.EAST, VoxelShapeHelper.rotateShape(Direction.DOWN, Direction.EAST, SHAPE));
         BY_DIRECTION.put(Direction.WEST, VoxelShapeHelper.rotateShape(Direction.DOWN, Direction.WEST, SHAPE));
-
-        Set<Direction> ext = EnumSet.of(Direction.DOWN);
-
     }
 
     @Override
@@ -89,10 +88,27 @@ public class FluidTransmitterBlock extends NBaseEntityBlock<FluidTransmitterBloc
         super.setPlacedBy(level, pos, state, placer, stack);
         Direction dir = state.getValue(BlockHelper.BlockProperties.FACING);
         BlockPos targetPos = pos.offset(dir.getNormal());
-        BlockState targetState = level.getBlockState(targetPos);
-        if (!targetState.isFaceSturdy(level, targetPos, dir.getOpposite()))
-           dropBlock(level, pos);
 
+        if (!FluidHelper.isFluidHandler(level, targetPos, null))
+            dropBlock(level, pos);
+
+    }
+
+    @Override
+    protected void neighborChanged(@NotNull BlockState state,
+                                   @NotNull Level level,
+                                   @NotNull BlockPos pos,
+                                   @NotNull Block neighborBlock,
+                                   @NotNull BlockPos neighborPos,
+                                   boolean movedByPiston)
+    {
+        super.neighborChanged(state, level, pos, neighborBlock, neighborPos, movedByPiston);
+
+        Direction dir = state.getValue(BlockHelper.BlockProperties.FACING);
+        BlockPos targetPos = pos.offset(dir.getNormal());
+
+        if (!FluidHelper.isFluidHandler(level, targetPos, null))
+            dropBlock(level, pos);
     }
 
     @Override

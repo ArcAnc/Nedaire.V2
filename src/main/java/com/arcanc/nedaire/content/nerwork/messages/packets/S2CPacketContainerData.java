@@ -7,7 +7,7 @@
  * Details can be found in the license file in the root folder of this project
  */
 
-package com.arcanc.nedaire.content.gui.nerwork.messages;
+package com.arcanc.nedaire.content.nerwork.messages.packets;
 
 import com.arcanc.nedaire.content.gui.container_menu.NContainerMenu;
 import com.arcanc.nedaire.content.gui.sync.GenericDataSerializers;
@@ -24,10 +24,10 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public record S2CMessageContainerData(List<Pair<Integer, GenericDataSerializers.DataPair<?>>> synced) implements IMessage
+public record S2CPacketContainerData(List<Pair<Integer, GenericDataSerializers.DataPair<?>>> synced) implements IPacket
 {
-    public static final CustomPacketPayload.Type<S2CMessageContainerData> TYPE = new CustomPacketPayload.Type<>(NDatabase.modRL("message_container_data"));
-    public static final StreamCodec<RegistryFriendlyByteBuf, S2CMessageContainerData> STREAM_CODEC = StreamCodec.composite(
+    public static final CustomPacketPayload.Type<S2CPacketContainerData> TYPE = new CustomPacketPayload.Type<>(NDatabase.modRL("message_container_data"));
+    public static final StreamCodec<RegistryFriendlyByteBuf, S2CPacketContainerData> STREAM_CODEC = StreamCodec.composite(
             StreamCodec.of(
                     (pBuffer, pValue) -> PacketHelper.writeList(pBuffer, pValue,
                         (pair, buf) ->
@@ -36,19 +36,20 @@ public record S2CMessageContainerData(List<Pair<Integer, GenericDataSerializers.
                             pair.getSecond().write(buf);
                         }),
                     pBuffer -> PacketHelper.readList(pBuffer, pb -> Pair.of(pb.readVarInt(), GenericDataSerializers.read(pb)))),
-            S2CMessageContainerData:: synced,
-            S2CMessageContainerData:: new
+            S2CPacketContainerData:: synced,
+            S2CPacketContainerData:: new
             );
 
-    public S2CMessageContainerData(List<Pair<Integer, GenericDataSerializers.DataPair<?>>> synced)
+    /*public S2CPacketContainerData(List<Pair<Integer, GenericDataSerializers.DataPair<?>>> synced)
     {
         this.synced = synced;
-    }
+    }*/
 
     @Override
     public void process(@NotNull IPayloadContext context)
     {
-        context.enqueueWork(() -> {
+        context.enqueueWork(() ->
+        {
             AbstractContainerMenu currentContainer = RenderHelper.clientPlayer().containerMenu;
             if(currentContainer instanceof NContainerMenu ieContainer)
                 ieContainer.receiveSync(synced);
@@ -56,7 +57,7 @@ public record S2CMessageContainerData(List<Pair<Integer, GenericDataSerializers.
     }
 
     @Override
-    public @NotNull Type<S2CMessageContainerData> type()
+    public @NotNull Type<S2CPacketContainerData> type()
     {
         return TYPE;
     }

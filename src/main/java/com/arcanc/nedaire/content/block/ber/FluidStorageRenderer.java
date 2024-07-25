@@ -100,7 +100,7 @@ public class FluidStorageRenderer implements BlockEntityRenderer<FluidStorageBlo
     {
         float minX = gas ? MAX_X : MIN_X;
         float maxX = gas ? MIN_X : MAX_X;
-        float y = MIN_Y + (gas ? (1F - height) * (MAX_Y - MIN_Y) : height * (MAX_Y - MIN_Y));
+        float y = (MIN_Y + (gas ? (1F - height) * (MAX_Y - MIN_Y) : height * (MAX_Y - MIN_Y)))* 0.85f;
 
         float minU = tex.getU(MIN_UV_T / 16f);
         float maxU = tex.getU(MAX_UV_T / 16f);

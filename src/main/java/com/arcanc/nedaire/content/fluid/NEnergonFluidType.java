@@ -34,49 +34,40 @@ public class NEnergonFluidType extends NFluidType
         this.energonType = type;
     }
 
-    @Override
-    public void initializeClient(@NotNull Consumer<IClientFluidTypeExtensions> consumer)
-    {
-        consumer.accept(new IClientFluidTypeExtensions()
-        {
+    public IClientFluidTypeExtensions registerClientExtensions() {
+        return new IClientFluidTypeExtensions() {
             @Override
-            public @NotNull ResourceLocation getStillTexture()
-            {
+            public @NotNull ResourceLocation getStillTexture() {
                 return stillTexture;
             }
 
             @Override
-            public @NotNull ResourceLocation getFlowingTexture()
-            {
+            public @NotNull ResourceLocation getFlowingTexture() {
                 return flowingTexture;
             }
 
             @Override
-            public @Nullable ResourceLocation getOverlayTexture()
-            {
+            public @Nullable ResourceLocation getOverlayTexture() {
                 return overlayTexture;
             }
 
             @Override
-            public int getTintColor()
-            {
+            public int getTintColor() {
                 return energonType.color();
             }
 
             @Override
-            public @NotNull Vector3f modifyFogColor(@NotNull Camera camera, float partialTick, @NotNull ClientLevel level, int renderDistance, float darkenWorldAmount, @NotNull Vector3f fluidFogColor)
-            {
+            public @NotNull Vector3f modifyFogColor(@NotNull Camera camera, float partialTick, @NotNull ClientLevel level, int renderDistance, float darkenWorldAmount, @NotNull Vector3f fluidFogColor) {
                 int[] color = RenderHelper.splitRGBA(energonType.color());
                 return new Vector3f(color[0], color[1], color[2]);
             }
 
             @Override
-            public void modifyFogRender(@NotNull Camera camera, FogRenderer.@NotNull FogMode mode, float renderDistance, float partialTick, float nearDistance, float farDistance, @NotNull FogShape shape)
-            {
+            public void modifyFogRender(@NotNull Camera camera, FogRenderer.@NotNull FogMode mode, float renderDistance, float partialTick, float nearDistance, float farDistance, @NotNull FogShape shape) {
                 RenderSystem.setShaderFogStart(1f);
                 RenderSystem.setShaderFogEnd(6f); // distance when the fog starts
             }
-        });
+        };
     }
 
     public EnergonType getEnergonType()

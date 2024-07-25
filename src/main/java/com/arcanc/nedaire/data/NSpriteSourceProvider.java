@@ -8,8 +8,9 @@
  */
 package com.arcanc.nedaire.data;
 
-import com.arcanc.nedaire.content.block.ber.NodeRenderer;
+import com.arcanc.nedaire.content.block.ber.FluidTransmitterRenderer;
 import com.arcanc.nedaire.util.NDatabase;
+import com.arcanc.nedaire.util.handlers.FluidTransportHandler;
 import net.minecraft.client.renderer.texture.atlas.sources.SingleFile;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
@@ -30,7 +31,7 @@ public class NSpriteSourceProvider extends SpriteSourceProvider
 	@Override
 	protected void gather()
 	{
-		//atlas(SpriteSourceProvider.BLOCKS_ATLAS).addSource(new SingleFile(NDatabase.modRL("block/node/normal"), Optional.empty()));
+		atlas(SpriteSourceProvider.BLOCKS_ATLAS).addSource(new SingleFile(NDatabase.modRL("misc/essentia"), Optional.of(FluidTransportHandler.ESSENTIA_TEXTURE)));
 	}
 
 }

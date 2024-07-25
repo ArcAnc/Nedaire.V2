@@ -11,8 +11,6 @@ package com.arcanc.nedaire.content.block;
 
 import com.arcanc.nedaire.content.block.block_entity.FluidStorageBlockEntity;
 import com.arcanc.nedaire.registration.NRegistration;
-import com.arcanc.nedaire.util.Upgrade;
-import com.arcanc.nedaire.util.helpers.BlockHelper;
 import com.arcanc.nedaire.util.inventory.fluids.SimpleFluidHandler;
 import com.mojang.serialization.MapCodec;
 import mcjty.theoneprobe.api.*;
@@ -26,38 +24,48 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.neoforged.neoforge.fluids.FluidUtil;
 import org.jetbrains.annotations.NotNull;
 
 public class FluidStorageBlock extends NBaseEntityBlock<FluidStorageBlockEntity> implements IProbeInfoAccessor
 {
-    private static final VoxelShape SHAPE = box(3, 0, 3, 13, 16, 13);
+    private static final VoxelShape SHAPE = Shapes.or(
+            box(3, 2, 3, 13, 14, 13),
+            box(11, 0, 1, 15, 4, 5),
+            box(11, 12, 1, 15, 16, 5),
+            box(11, 12, 11, 15, 16, 15),
+            box(11, 0, 11, 15, 4, 15),
+            box(1, 0, 11, 5, 4, 15),
+            box(1, 12, 11, 5, 16, 15),
+            box(1, 0, 1, 5, 4, 5),
+            box(1, 12, 1, 5, 16, 5),
+            box(2, 0, 5, 5, 2, 11),
+            box(11, 0, 5, 14, 2, 11),
+            box(11, 14, 5, 14, 16, 11),
+            box(2, 14, 5, 5, 16, 11),
+            box(12, 4, 12, 14, 12, 14),
+            box(12, 4, 2, 14, 12, 4),
+            box(2, 4, 2, 4, 12, 4),
+            box(2, 4, 12, 4, 12, 14),
+            box(5, 14, 11, 11, 16, 14),
+            box(5, 0, 11, 11, 2, 14),
+            box(5, 14, 2, 11, 16, 5),
+            box(5, 0, 2, 11, 2, 5),
+            box(1, 6.5f, 13, 3, 9.5f, 15),
+            box(13, 6.5f, 13, 15, 9.5f, 15),
+            box(13, 6.5f, 1, 15, 9.5f, 3),
+            box(1, 6.5f, 1, 3, 9.5f, 3)
+            );
 
     public static final MapCodec<FluidStorageBlock> CODEC = simpleCodec(FluidStorageBlock :: new);
 
     public FluidStorageBlock(Properties props)
     {
         super (NRegistration.NBlockEntities.BE_FLUID_STORAGE, props);
-    }
-
-    @Override
-    protected BlockState getInitDefaultState()
-    {
-        BlockState state = super.getInitDefaultState();
-
-        if (state.hasProperty(BlockHelper.BlockProperties.UPGRADE_LEVEL))
-            state.setValue(BlockHelper.BlockProperties.UPGRADE_LEVEL, Upgrade.SPARK.getLvl());
-        return state;
-    }
-
-    @Override
-    protected void createBlockStateDefinition(StateDefinition.@NotNull Builder<Block, BlockState> builder)
-    {
-        builder.add(BlockHelper.BlockProperties.WATERLOGGED, BlockHelper.BlockProperties.UPGRADE_LEVEL);
     }
 
     @Override
@@ -69,7 +77,7 @@ public class FluidStorageBlock extends NBaseEntityBlock<FluidStorageBlockEntity>
                                                        @NotNull InteractionHand hand,
                                                        @NotNull BlockHitResult hitResult)
     {
-        if(FluidUtil.interactWithFluidHandler(player, hand, level, pos, hitResult.getDirection()))
+        if(FluidUtil.interactWithFluidHandler(player, hand, level, pos, null))
         {
             return ItemInteractionResult.sidedSuccess(level.isClientSide());
         }

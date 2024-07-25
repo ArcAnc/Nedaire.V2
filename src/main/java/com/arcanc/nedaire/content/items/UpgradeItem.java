@@ -9,7 +9,6 @@
 
 package com.arcanc.nedaire.content.items;
 
-import com.arcanc.nedaire.Nedaire;
 import com.arcanc.nedaire.util.Upgrade;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionResult;
@@ -39,7 +38,6 @@ public class UpgradeItem extends NBaseItem
         BlockPos pos = context.getClickedPos();
         ItemStack stack = context.getItemInHand();
 
-        Nedaire.getLogger().warn("Try to apply upgrade!");
         if (Upgrade.canApplyUpgrade(level, pos, stack))
             return InteractionResult.sidedSuccess(level.isClientSide());
 

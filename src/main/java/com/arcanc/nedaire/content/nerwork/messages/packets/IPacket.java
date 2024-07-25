@@ -7,14 +7,14 @@
  * Details can be found in the license file in the root folder of this project
  */
 
-package com.arcanc.nedaire.content.gui.nerwork.messages;
+package com.arcanc.nedaire.content.nerwork.messages.packets;
 
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 import org.jetbrains.annotations.NotNull;
 
-public interface IMessage extends CustomPacketPayload
+public interface IPacket extends CustomPacketPayload
 {
     void process(IPayloadContext context);
 

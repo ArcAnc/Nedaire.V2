@@ -48,6 +48,38 @@ public class NDatabase
             public static final String FLUID_TRANSMITTER = "fluid_transmitter";
             public static final String FLUID_STORAGE = "fluid_storage";
         }
+
+        public static final class BlockEntities
+        {
+            public static final class TagAddress
+            {
+                public static final class Machines
+                {
+                    public static final class RedstoneSensitive
+                    {
+                        public static final String REDSTONE_MOD = "redstone_mod";
+                    }
+
+                    public static final class Filter
+                    {
+                        public static final String FILTER_TAG = "filter_tag";
+                        public static final String LIST_TYPE = "list_type";
+                        public static final String ROUTE = "route";
+                        public static final String NBT = "nbt";
+                        public static final String TAG_CHECK = "tag_check";
+                        public static final String MOD_OWNER = "mod_owner";
+                        public static final String TARGET = "target";
+                    }
+
+                    public static final class FluidTransmitter
+                    {
+                        public static final String POS_LIST = "pos_list";
+                        public static final String PREV_TARGET_INDEX = "prev_target_index";
+                        public static final String TRANSFER_AMOUNT = "transfer_amount";
+                    }
+                }
+            }
+        }
     }
 
     public static final class ItemsInfo
@@ -93,6 +125,14 @@ public class NDatabase
         public static ResourceLocation getBucketLocation(String name)
         {
             return modRL("fluids/" + name + "/bucket");
+        }
+    }
+
+    public static final class EntitiesInfo
+    {
+        public static final class Transfer
+        {
+            public static final String STACK = "stack";
         }
     }
 
@@ -197,7 +237,6 @@ public class NDatabase
         public static final String IS_MASTER = nameBuilder.apply("is_master");
         public static final String MASTER_POS = nameBuilder.apply("master_pos");
     }
-
     public static @NotNull ResourceLocation modRL(@NotNull String s)
     {
         return ResourceLocation.fromNamespaceAndPath(MOD_ID, s);

@@ -9,8 +9,11 @@
 
 package com.arcanc.nedaire.content.items;
 
+import com.arcanc.nedaire.Nedaire;
 import com.arcanc.nedaire.content.block.BlockInterfaces;
+import com.arcanc.nedaire.registration.NRegistration;
 import com.arcanc.nedaire.util.helpers.BlockHelper;
+import com.arcanc.nedaire.util.helpers.FluidHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.ItemStack;
@@ -32,6 +35,17 @@ public class WrenchItem extends NBaseItem
         BlockPos pos = context.getClickedPos();
         return BlockHelper.castTileEntity(level, pos, BlockInterfaces.INWrencheable.class).
                 map(tile -> tile.onUsed(stack, context)).
+                or(() -> BlockHelper.getTileEntity(level, pos).map(blockEntity ->
+                        {
+                            if (FluidHelper.isFluidHandler(blockEntity))
+                                if (!stack.has(NRegistration.NDataComponents.POSITION))
+                                {
+                                    stack.set(NRegistration.NDataComponents.POSITION, pos);
+                                    return InteractionResult.sidedSuccess(level.isClientSide());
+                                }
+                            return super.onItemUseFirst(stack, context);
+                        })
+                ).
                 orElse(super.onItemUseFirst(stack, context));
     }
 }

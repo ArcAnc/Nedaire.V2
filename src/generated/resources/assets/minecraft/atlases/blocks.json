@@ -1,0 +1,9 @@
+{
+  "sources": [
+    {
+      "type": "minecraft:single",
+      "resource": "nedaire:misc/essentia",
+      "sprite": "nedaire:essentia"
+    }
+  ]
+}

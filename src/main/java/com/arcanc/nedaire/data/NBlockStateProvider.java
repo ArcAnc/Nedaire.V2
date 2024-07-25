@@ -12,8 +12,8 @@ package com.arcanc.nedaire.data;
 import com.arcanc.nedaire.content.block.FluidTransmitterBlock;
 import com.arcanc.nedaire.registration.NRegistration;
 import com.arcanc.nedaire.util.NDatabase;
-import com.arcanc.nedaire.util.Upgrade;
 import com.arcanc.nedaire.util.helpers.BlockHelper;
+import com.arcanc.nedaire.util.model.SimpleModel;
 import net.minecraft.core.Direction;
 import net.minecraft.data.PackOutput;
 import net.minecraft.resources.ResourceLocation;
@@ -21,9 +21,6 @@ import net.minecraft.world.level.block.Block;
 import net.neoforged.neoforge.client.model.generators.*;
 import net.neoforged.neoforge.common.data.ExistingFileHelper;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import static com.arcanc.nedaire.util.helpers.BlockHelper.BlockProperties.ENABLED;
 import static com.arcanc.nedaire.util.helpers.BlockHelper.BlockProperties.FACING;
@@ -475,70 +472,408 @@ public class NBlockStateProvider extends BlockStateProvider
 
     private void registerFluidStorage(Block block)
     {
-        List<ModelFile> models = new ArrayList<>();
         ResourceLocation texTop = NDatabase.modRL(blockPrefix(NDatabase.BlocksInfo.Names.FLUID_STORAGE + "/updown"));
-        for (Upgrade upg : Upgrade.values())
-        {
-            ResourceLocation texGlass = NDatabase.modRL(blockPrefix(NDatabase.BlocksInfo.Names.FLUID_STORAGE + "/glass_" + upg.getLvl()));
-
-            ModelFile model = models().withExistingParent(blockPrefix(name(block)) + "_" + upg.getLvl(), mcLoc(blockPrefix("block"))).
+        ResourceLocation texGlass = NDatabase.modRL(blockPrefix(NDatabase.BlocksInfo.Names.FLUID_STORAGE + "/glass"));
+        ResourceLocation texFrame = NDatabase.modRL(blockPrefix(NDatabase.BlocksInfo.Names.FLUID_STORAGE + "/frame"));
+        ResourceLocation texUpg0 = NDatabase.modRL(blockPrefix(NDatabase.BlocksInfo.Names.FLUID_STORAGE + "/upg_0"));
+        ResourceLocation texUpg1 = NDatabase.modRL(blockPrefix(NDatabase.BlocksInfo.Names.FLUID_STORAGE + "/upg_1"));
+        ResourceLocation texUpg2 = NDatabase.modRL(blockPrefix(NDatabase.BlocksInfo.Names.FLUID_STORAGE + "/upg_2"));
+        ResourceLocation texUpg3 = NDatabase.modRL(blockPrefix(NDatabase.BlocksInfo.Names.FLUID_STORAGE + "/upg_3"));
+        ResourceLocation texUpg4 = NDatabase.modRL(blockPrefix(NDatabase.BlocksInfo.Names.FLUID_STORAGE + "/upg_4"));
+        ModelFile model = models().withExistingParent(blockPrefix(name(block)), mcLoc(blockPrefix("block"))).
+                    customLoader(SimpleModel.ModelLoader :: new).end().
                     renderType("cutout").
                     texture("glass", texGlass).
                     texture("updown", texTop).
+                    texture("frame", texFrame).
+                    texture("upg", texUpg0).
+                    texture("upg1", texUpg1).
+                    texture("upg2", texUpg2).
+                    texture("upg3", texUpg3).
+                    texture("upg4", texUpg4).
                     texture("particle", texGlass).
                     texture("port", getPortTexture()).
                     ao(false).
                     element().
-                    from(3, 0, 3).
-                    to(13, 16, 13).
-                    allFaces((face, builder) ->
-                    {
-                        builder.uvs(0, 0, 16, 16);
-                        if (face.getAxis().isHorizontal())
-                            builder.texture("#glass");
-                        else
-                            builder.texture("#updown").cullface(face);
+                        from(3, 1.999f, 3).
+                        to(13, 14.001f, 13).
+                        allFaces((direction, faceBuilder) ->
+                        {
+                           if (direction.getAxis().isHorizontal())
+                               faceBuilder.uvs(1, 2, 15,14).texture("#glass");
+                           else
+                               faceBuilder.uvs(0, 0, 16, 16).texture("#updown");
+                        }).
+                    end().
+                    /*element().
+                        from(13, 13.999f, 13).
+                        to(3, 1.999f, 13).
+                        allFaces((direction, faceBuilder) ->
+                        {
+                            if (direction.getAxis().isHorizontal())
+                                faceBuilder.uvs(1, 14, 15, 2).texture("#glass");
+                            else
+                                faceBuilder.uvs(16, 0, 0, 16).texture("#updown");
+                        }).
+                    end().*/
+                    element().
+                        from(11, 0, 1).
+                        to(15, 4, 5).
+                        allFaces((direction, faceBuilder) -> faceBuilder.uvs(0, 12, 4, 16).texture("#frame")).
+                        face(EAST).rotation(ModelBuilder.FaceRotation.COUNTERCLOCKWISE_90).end().
+                        face(SOUTH).rotation(ModelBuilder.FaceRotation.CLOCKWISE_90).end().
+                        face(WEST).rotation(ModelBuilder.FaceRotation.UPSIDE_DOWN).end().
+                        face(DOWN).rotation(ModelBuilder.FaceRotation.COUNTERCLOCKWISE_90).cullface(DOWN).end().
+                    end().
+                    element().
+                        from(11, 12, 1).
+                        to(15, 16, 5).
+                        allFaces((direction, faceBuilder) -> faceBuilder.uvs(0, 12, 4, 16).texture("#frame")).
+                        face(NORTH).rotation(ModelBuilder.FaceRotation.CLOCKWISE_90).end().
+                        face(EAST).rotation(ModelBuilder.FaceRotation.UPSIDE_DOWN).end().
+                        face(WEST).rotation(ModelBuilder.FaceRotation.COUNTERCLOCKWISE_90).end().
+                        face(UP).rotation(ModelBuilder.FaceRotation.UPSIDE_DOWN).cullface(UP).end().
+                        face(DOWN).rotation(ModelBuilder.FaceRotation.COUNTERCLOCKWISE_90).end().
+                    end().
+                    element().
+                        from(11, 12, 11).
+                        to(15, 16, 15).
+                        allFaces((direction, faceBuilder) -> faceBuilder.uvs(0, 12, 4, 16).texture("#frame")).
+                        face(NORTH).rotation(ModelBuilder.FaceRotation.COUNTERCLOCKWISE_90).end().
+                        face(EAST).rotation(ModelBuilder.FaceRotation.CLOCKWISE_90).end().
+                        face(SOUTH).rotation(ModelBuilder.FaceRotation.UPSIDE_DOWN).end().
+                        face(UP).rotation(ModelBuilder.FaceRotation.COUNTERCLOCKWISE_90).cullface(UP).end().
+                        face(DOWN).end().
+                    end().
+                    element().
+                        from(11, 0, 11).
+                        to(15, 4, 15).
+                        allFaces((direction, faceBuilder) -> faceBuilder.uvs(0, 12, 4, 16).texture("#frame")).
+                        face(NORTH).rotation(ModelBuilder.FaceRotation.UPSIDE_DOWN).end().
+                        face(SOUTH).rotation(ModelBuilder.FaceRotation.COUNTERCLOCKWISE_90).end().
+                        face(WEST).rotation(ModelBuilder.FaceRotation.CLOCKWISE_90).end().
+                        face(UP).rotation(ModelBuilder.FaceRotation.CLOCKWISE_90).end().
+                        face(DOWN).rotation(ModelBuilder.FaceRotation.UPSIDE_DOWN).cullface(DOWN).end().
+                    end().
+                    element().
+                        from(1, 0, 11).
+                        to(5, 4, 15).
+                        allFaces((direction, faceBuilder) -> faceBuilder.uvs(0, 12, 4, 16).texture("#frame")).
+                        face(NORTH).rotation(ModelBuilder.FaceRotation.CLOCKWISE_90).end().
+                        face(EAST).rotation(ModelBuilder.FaceRotation.UPSIDE_DOWN).end().
+                        face(WEST).rotation(ModelBuilder.FaceRotation.COUNTERCLOCKWISE_90).end().
+                        face(UP).rotation(ModelBuilder.FaceRotation.UPSIDE_DOWN).end().
+                        face(DOWN).rotation(ModelBuilder.FaceRotation.CLOCKWISE_90).cullface(DOWN).end().
+                    end().
+                    element().
+                        from(1, 12,11).
+                        to(5, 16, 15).
+                        allFaces((direction, faceBuilder) -> faceBuilder.uvs(0, 12, 4, 16).texture("#frame")).
+                        face(EAST).rotation(ModelBuilder.FaceRotation.COUNTERCLOCKWISE_90).end().
+                        face(SOUTH).rotation(ModelBuilder.FaceRotation.CLOCKWISE_90).end().
+                        face(WEST).rotation(ModelBuilder.FaceRotation.UPSIDE_DOWN).end().
+                        face(UP).cullface(UP).end().
+                        face(DOWN).rotation(ModelBuilder.FaceRotation.COUNTERCLOCKWISE_90).end().
+                    end().
+                    element().
+                        from(1, 0,1).
+                        to(5, 4, 5).
+                        allFaces((direction, faceBuilder) -> faceBuilder.uvs(0, 12, 4, 16).texture("#frame")).
+                        face(NORTH).rotation(ModelBuilder.FaceRotation.COUNTERCLOCKWISE_90).end().
+                        face(EAST).rotation(ModelBuilder.FaceRotation.CLOCKWISE_90).end().
+                        face(SOUTH).rotation(ModelBuilder.FaceRotation.UPSIDE_DOWN).end().
+                        face(UP).rotation(ModelBuilder.FaceRotation.COUNTERCLOCKWISE_90).end().
+                        face(DOWN).cullface(DOWN).end().
+                    end().
+                    element().
+                        from(1, 12,1).
+                        to(5, 16, 5).
+                        allFaces((direction, faceBuilder) -> faceBuilder.uvs(0, 12, 4, 16).texture("#frame")).
+                        face(NORTH).rotation(ModelBuilder.FaceRotation.UPSIDE_DOWN).end().
+                        face(SOUTH).rotation(ModelBuilder.FaceRotation.COUNTERCLOCKWISE_90).end().
+                        face(WEST).rotation(ModelBuilder.FaceRotation.CLOCKWISE_90).end().
+                        face(UP).rotation(ModelBuilder.FaceRotation.CLOCKWISE_90).cullface(UP).end().
+                        face(DOWN).rotation(ModelBuilder.FaceRotation.UPSIDE_DOWN).end().
+                    end().
+                    element().
+                        from(2, 0,5).
+                        to(5, 2, 11).
+                        /*FIXME: переписать на except, когда его добавят наконецто*/
+                        allFaces((direction, faceBuilder) ->
+                        {
+                            if (direction.getAxis() == Axis.Z)
+                                return;
+                            if (direction.getAxis().isHorizontal())
+                                faceBuilder.uvs(4, 14, 10, 16);
+                            else
+                            {
+                                faceBuilder.uvs(8, 8, 11, 14);
+                                if (direction == DOWN)
+                                    faceBuilder.cullface(direction);
+                            }
+                            faceBuilder.texture("#frame");
+
+                        }).
+                    end().
+                    element().
+                        from(11, 0,5).
+                        to(14, 2, 11).
+                        /*FIXME: переписать на except, когда его добавят наконецто*/
+                        allFaces((direction, faceBuilder) ->
+                        {
+                            if (direction.getAxis() == Axis.Z)
+                                return;
+                            if (direction.getAxis().isHorizontal())
+                                faceBuilder.uvs(4, 14, 10, 16);
+                            else
+                            {
+                                faceBuilder.uvs(8, 8, 11, 14);
+                                if (direction == DOWN)
+                                    faceBuilder.cullface(direction);
+                            }
+                            faceBuilder.texture("#frame");
+
                     }).
                     end().
                     element().
-                    from(13, 16, 13).
-                    to(3, 0, 3).
-                    face(Direction.NORTH).
-                    uvs(0, 16, 16, 0).
-                    texture("#glass").
-                    end().
-                    face(Direction.SOUTH).
-                    uvs(0, 16, 16, 0).
-                    texture("#glass").
-                    end().
-                    face(Direction.WEST).
-                    uvs(0, 16, 16, 0).
-                    texture("#glass").
-                    end().
-                    face(Direction.EAST).
-                    uvs(0, 16, 16, 0).
-                    texture("#glass").
-                    end().
+                        from(11, 14,5).
+                        to(14, 16, 11).
+                        /*FIXME: переписать на except, когда его добавят наконецто*/
+                        allFaces((direction, faceBuilder) ->
+                        {
+                            if (direction.getAxis() == Axis.Z)
+                                return;
+                            if (direction.getAxis().isHorizontal())
+                                faceBuilder.uvs(4, 14, 10, 16);
+                            else
+                            {
+                                faceBuilder.uvs(8, 8, 11, 14);
+                                if (direction == UP)
+                                    faceBuilder.cullface(direction);
+                            }
+                            faceBuilder.texture("#frame");
+
+                        }).
                     end().
                     element().
-                    from(-0.001f, -0.001f, -0.001f).
-                    to(16.001f, 16.001f, 16.001f).
-                    face(Direction.UP).
-                    texture("#port").
-                    cullface(Direction.UP).
-                    tintindex(Direction.UP.get3DDataValue()).
+                        from(2, 14,5).
+                        to(5, 16, 11).
+                        /*FIXME: переписать на except, когда его добавят наконецто*/
+                        allFaces((direction, faceBuilder) ->
+                        {
+                            if (direction.getAxis() == Axis.Z)
+                                return;
+                            if (direction.getAxis().isHorizontal())
+                                faceBuilder.uvs(4, 14, 10, 16);
+                            else
+                            {
+                                faceBuilder.uvs(8, 8, 11, 14);
+                                if (direction == UP)
+                                    faceBuilder.cullface(direction);
+                            }
+                            faceBuilder.texture("#frame");
+                        }).
                     end().
-                    face(Direction.DOWN).
-                    texture("#port").
-                    cullface(Direction.DOWN).
-                    tintindex(Direction.DOWN.get3DDataValue()).
+                    element().
+                        from(12, 4,12).
+                        to(14, 12, 14).
+                        /*FIXME: переписать на except, когда его добавят наконецто*/
+                        allFaces((direction, faceBuilder) ->
+                        {
+                            if (direction.getAxis().isVertical())
+                                return;
+                            faceBuilder.uvs(0, 4, 2, 12).texture("#frame");
+                    }).
                     end().
+                    element().
+                        from(12, 4, 2).
+                        to(14, 12, 4).
+                        /*FIXME: переписать на except, когда его добавят наконецто*/
+                        allFaces((direction, faceBuilder) ->
+                        {
+                           if (direction.getAxis().isVertical())
+                               return;
+                           faceBuilder.uvs(0, 4, 2, 12).texture("#frame");
+                        }).
+                    end().
+                    element().
+                        from(2, 4, 2).
+                        to(4, 12, 4).
+                        /*FIXME: переписать на except, когда его добавят наконецто*/
+                        allFaces((direction, faceBuilder) ->
+                        {
+                            if (direction.getAxis().isVertical())
+                                return;
+                            faceBuilder.uvs(0, 4, 2, 12).texture("#frame");
+                        }).
+                    end().
+                    element().
+                        from(2, 4, 12).
+                        to(4, 12, 14).
+                        /*FIXME: переписать на except, когда его добавят наконецто*/
+                        allFaces((direction, faceBuilder) ->
+                        {
+                            if (direction.getAxis().isVertical())
+                                return;
+                            faceBuilder.uvs(0, 4, 2, 12).texture("#frame");
+                        }).
+                    end().
+                    element().
+                        from(5, 14, 11).
+                        to(11,16, 14).
+                        /*FIXME: переписать на except, когда его добавят наконецто*/
+                        allFaces((direction, faceBuilder) ->
+                        {
+                            if (direction.getAxis() == Axis.X)
+                                return;
+                            if (direction.getAxis().isHorizontal())
+                                faceBuilder.uvs(4, 14, 10, 16);
+                            else
+                            {
+                                faceBuilder.uvs(8, 8, 11, 14).rotation(ModelBuilder.FaceRotation.CLOCKWISE_90);
+                                if (direction == UP)
+                                    faceBuilder.cullface(direction);
+                            }
+                            faceBuilder.texture("#frame");
+                        }).
+                    end().
+                    element().
+                        from(5, 0, 11).
+                        to(11, 2, 14).
+                        /*FIXME: переписать на except, когда его добавят наконецто*/
+                        allFaces((direction, faceBuilder) ->
+                        {
+                            if (direction.getAxis() == Axis.X)
+                                return;
+                            if (direction.getAxis().isHorizontal())
+                                faceBuilder.uvs(4, 14, 10, 16);
+                            else
+                            {
+                                faceBuilder.uvs(8, 8, 11, 14).rotation(ModelBuilder.FaceRotation.CLOCKWISE_90);
+                                if (direction == DOWN)
+                                    faceBuilder.cullface(direction);
+                            }
+                            faceBuilder.texture("#frame");
+                    }).
+                    end().
+                    element().
+                        from(5, 14, 2).
+                        to(11, 16, 5).
+                        /*FIXME: переписать на except, когда его добавят наконецто*/
+                        allFaces((direction, faceBuilder) ->
+                        {
+                            if (direction.getAxis() == Axis.X)
+                                return;
+                            if (direction.getAxis().isHorizontal())
+                                faceBuilder.uvs(4, 14, 10, 16);
+                            else
+                            {
+                                faceBuilder.uvs(8, 8, 11, 14).rotation(ModelBuilder.FaceRotation.CLOCKWISE_90);
+                                if (direction == UP)
+                                    faceBuilder.cullface(direction);
+                            }
+                            faceBuilder.texture("#frame");
+                        }).
+                    end().
+                    element().
+                        from(5, 0, 2).
+                        to(11, 2, 5).
+                        /*FIXME: переписать на except, когда его добавят наконецто*/
+                        allFaces((direction, faceBuilder) ->
+                        {
+                            if (direction.getAxis() == Axis.X)
+                                return;
+                            if (direction.getAxis().isHorizontal())
+                                faceBuilder.uvs(4, 14, 10, 16);
+                            else
+                            {
+                                faceBuilder.uvs(8, 8, 11, 14).rotation(ModelBuilder.FaceRotation.CLOCKWISE_90);
+                                if (direction == DOWN)
+                                    faceBuilder.cullface(direction);
+                            }
+                            faceBuilder.texture("#frame");
+                        }).
+                    end().
+                    element().
+                        from(1, 6.5f, 13).
+                        to(3, 9.5f, 15).
+                        allFaces((direction, faceBuilder) ->
+                        {
+                            if (direction.getAxis().isHorizontal())
+                                faceBuilder.uvs(14, 6, 16, 9);
+                            else
+                            {
+                                if (direction == DOWN)
+                                    faceBuilder.uvs(14, 10, 16, 12);
+                                else
+                                    faceBuilder.uvs(14, 3, 16, 5);
+                            }
+                            faceBuilder.texture("#upg").tintindex(1);
+                        }).
+                    end().
+                    element().
+                        from(13, 6.5f, 13).
+                        to(15, 9.5f, 15).
+                        allFaces((direction, faceBuilder) ->
+                        {
+                            if (direction.getAxis().isHorizontal())
+                                faceBuilder.uvs(14, 6, 16, 9);
+                            else
+                            {
+                                if (direction == DOWN)
+                                    faceBuilder.uvs(14, 10, 16, 12);
+                                else
+                                    faceBuilder.uvs(14, 3, 16, 5);
+                            }
+                            faceBuilder.texture("#upg").tintindex(1);
+                        }).
+                    end().
+                    element().
+                        from(13, 6.5f, 1).
+                        to(15, 9.5f, 3).
+                        allFaces((direction, faceBuilder) ->
+                        {
+                            if (direction.getAxis().isHorizontal())
+                                faceBuilder.uvs(14, 6, 16, 9);
+                            else
+                            {
+                                if (direction == DOWN)
+                                    faceBuilder.uvs(14, 10, 16, 12);
+                                else
+                                    faceBuilder.uvs(14, 3, 16, 5);
+                            }
+                            faceBuilder.texture("#upg").tintindex(1);
+                        }).
+                    end().
+                    element().
+                        from(1, 6.5f, 1).
+                        to(3, 9.5f, 3).
+                        allFaces((direction, faceBuilder) ->
+                        {
+                            if (direction.getAxis().isHorizontal())
+                                faceBuilder.uvs(14, 6, 16, 9);
+                            else
+                            {
+                                if (direction == DOWN)
+                                    faceBuilder.uvs(14, 10, 16, 12);
+                                else
+                                    faceBuilder.uvs(14, 3, 16, 5);
+                            }
+                            faceBuilder.texture("#upg").tintindex(1);
+                        }).
+                    end().
+                    element().
+                        from(0, 1.998f, 0).
+                        to(16, 1.998f, 16).
+                        face(DOWN).uvs(0,0, 16, 16).texture("#port").end().
+                    end().
+                    element().
+                        from(0, 14.002f, 0).
+                        to(16, 14.002f, 16).
+                        face(UP).uvs(0,0, 16, 16).texture("#port").end().
                     end();
 
-            models.add(model);
-        }
-
-        getVariantBuilder(block).forAllStates(state ->
+        /*getVariantBuilder(block).forAllStates(state ->
         {
             int lvl = state.getValue(BlockHelper.BlockProperties.UPGRADE_LEVEL);
 
@@ -546,8 +881,8 @@ public class NBlockStateProvider extends BlockStateProvider
         });
 
         itemModels().getBuilder(itemPrefix(name(block))).
-                parent(models.getFirst());
-        //registerModels(block, model);
+                parent(models.getFirst());*/
+        registerModels(block, model);
     }
 
 
