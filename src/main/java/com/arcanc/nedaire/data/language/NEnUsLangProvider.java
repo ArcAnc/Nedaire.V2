@@ -34,6 +34,16 @@ public class NEnUsLangProvider extends LanguageProvider
 
 		addBlock(NRegistration.NBlocks.FLUID_STORAGE_BLOCK,  "Fluid Storage");
 		addBlock(NRegistration.NBlocks.FLUID_TRANSMITTER_BLOCK,  "Fluid Transmitter");
+
+		add(NDatabase.GUIInfo.Descriptions.getDescription(NDatabase.GUIInfo.Descriptions.Filter.BUTTON_MINUS), "Lower transfer per tick\n§8CTRL§r -10\n§8SHIFT§r -100\n§8SHIFT + CTRL§r -1000");
+		add(NDatabase.GUIInfo.Descriptions.getDescription(NDatabase.GUIInfo.Descriptions.Filter.BUTTON_PLUS), "Increase transfer per tick\n§8CTRL§r +10\n§8SHIFT§r +100\n§8SHIFT + CTRL§r +1000");
+
+		add(NDatabase.GUIInfo.Descriptions.getDescription(NDatabase.GUIInfo.Descriptions.Filter.BUTTON_LIST_TYPE), "Allow/Deny List");
+		add(NDatabase.GUIInfo.Descriptions.getDescription(NDatabase.GUIInfo.Descriptions.Filter.BUTTON_ROUTE), "Input/Output/Bidirectional");
+		add(NDatabase.GUIInfo.Descriptions.getDescription(NDatabase.GUIInfo.Descriptions.Filter.BUTTON_NBT), "Check/Ignore NBT");
+		add(NDatabase.GUIInfo.Descriptions.getDescription(NDatabase.GUIInfo.Descriptions.Filter.BUTTON_TAG), "Check/Ignore Tag");
+		add(NDatabase.GUIInfo.Descriptions.getDescription(NDatabase.GUIInfo.Descriptions.Filter.BUTTON_MOD_OWNER), "Check/Ignore Mod Owner");
+		add(NDatabase.GUIInfo.Descriptions.getDescription(NDatabase.GUIInfo.Descriptions.Filter.BUTTON_TARGET), "Nearest First/Furthest First/Random/Round Robin");
 	}
 	
 

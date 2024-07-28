@@ -1,10 +1,18 @@
 {
-  "nedaire.fluid_storage": "Fluid Storage",
-  "nedaire.fluid_transmitter": "Fluid Transmitter",
+  "nedaire.block.fluid_storage": "Fluid Storage",
+  "nedaire.block.fluid_transmitter": "Fluid Transmitter",
   "nedaire.fluids.blue.bucket": "Blue Energon Bucket",
   "nedaire.fluids.dark.bucket": "Dark Energon Bucket",
   "nedaire.fluids.green.bucket": "Green Energon Bucket",
   "nedaire.fluids.red.bucket": "Red Energon Bucket",
   "nedaire.fluids.yellow.bucket": "Yellow Energon Bucket",
-  "nedaire.wrench": "Wrench"
+  "nedaire.gui.description.button.list_type": "Allow/Deny List",
+  "nedaire.gui.description.button.minus": "Lower transfer per tick\n§8CTRL§r -10\n§8SHIFT§r -100\n§8SHIFT + CTRL§r -1000",
+  "nedaire.gui.description.button.mod_owner": "Check/Ignore Mod Owner",
+  "nedaire.gui.description.button.nbt": "Check/Ignore NBT",
+  "nedaire.gui.description.button.plus": "Increase transfer per tick\n§8CTRL§r +10\n§8SHIFT§r +100\n§8SHIFT + CTRL§r +1000",
+  "nedaire.gui.description.button.route": "Input/Output/Bidirectional",
+  "nedaire.gui.description.button.tag": "Check/Ignore Tag",
+  "nedaire.gui.description.button.target": "Nearest First/Furthest First/Random/Round Robin",
+  "nedaire.item.wrench": "Wrench"
 }

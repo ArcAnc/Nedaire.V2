@@ -9,7 +9,6 @@
 
 package com.arcanc.nedaire.content.nerwork.messages.packets;
 
-import com.arcanc.nedaire.Nedaire;
 import com.arcanc.nedaire.util.NDatabase;
 import com.arcanc.nedaire.util.handlers.FluidTransportHandler;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -21,13 +20,13 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Map;
 import java.util.UUID;
 
-public record S2CPacketCreateFluidTransport(FluidTransportHandler.Transport transport) implements IPacket
+public record S2CCreateFluidTransportPacket(FluidTransportHandler.Transport transport) implements IPacket
 {
-    public static final CustomPacketPayload.Type<S2CPacketCreateFluidTransport> TYPE = new CustomPacketPayload.Type<>(NDatabase.modRL("message_create_fluid_transport"));
-    public static final StreamCodec<RegistryFriendlyByteBuf, S2CPacketCreateFluidTransport> STREAM_CODEC = StreamCodec.composite(
+    public static final CustomPacketPayload.Type<S2CCreateFluidTransportPacket> TYPE = new CustomPacketPayload.Type<>(NDatabase.modRL("message_create_fluid_transport"));
+    public static final StreamCodec<RegistryFriendlyByteBuf, S2CCreateFluidTransportPacket> STREAM_CODEC = StreamCodec.composite(
             FluidTransportHandler.Transport.STREAM_CODEC,
-            S2CPacketCreateFluidTransport :: transport,
-            S2CPacketCreateFluidTransport :: new);
+            S2CCreateFluidTransportPacket:: transport,
+            S2CCreateFluidTransportPacket:: new);
 
 
     @Override

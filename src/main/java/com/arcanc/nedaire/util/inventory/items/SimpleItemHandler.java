@@ -63,6 +63,12 @@ public class SimpleItemHandler implements IItemHandler, INBTSerializable<Compoun
         return slots.size();
     }
 
+    public void setStackInSlot(int slot, @NotNull ItemStack stack)
+    {
+        validateSlotIndex(slot);
+        this.slots.get(slot).setStack(stack);
+    }
+
     @Override
     public @NotNull ItemStack getStackInSlot(int slot)
     {
@@ -93,6 +99,17 @@ public class SimpleItemHandler implements IItemHandler, INBTSerializable<Compoun
     {
         validateSlotIndex(slot);
         return this.slots.get(slot).getCapacity();
+    }
+
+    public ItemStackHolder getSlot(int slot)
+    {
+        validateSlotIndex(slot);
+        return this.slots.get(slot);
+    }
+
+    public @NotNull List<ItemStackHolder> getHolders ()
+    {
+        return this.slots;
     }
 
     @Override

@@ -9,10 +9,10 @@
 
 package com.arcanc.nedaire.content.block.block_entity;
 
-import com.arcanc.nedaire.Nedaire;
 import com.arcanc.nedaire.content.block.BlockInterfaces;
 import com.arcanc.nedaire.content.block.block_entity.ticking.NServerTickableBE;
-import com.arcanc.nedaire.content.nerwork.messages.packets.S2CPacketCreateFluidTransport;
+import com.arcanc.nedaire.content.gui.container_menu.FluidTransmitterContainer;
+import com.arcanc.nedaire.content.nerwork.messages.packets.S2CCreateFluidTransportPacket;
 import com.arcanc.nedaire.registration.NRegistration;
 import com.arcanc.nedaire.util.NDatabase;
 import com.arcanc.nedaire.util.filter.FilterMethod;
@@ -28,24 +28,25 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.LongTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.server.level.ServerLevel;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
-public class FluidTransmitterBlockEntity extends RedstoneSensitiveBlockEntity implements BlockInterfaces.INWrencheable, NServerTickableBE
+public class FluidTransmitterBlockEntity extends RedstoneSensitiveBlockEntity implements BlockInterfaces.INWrencheable, NServerTickableBE, BlockInterfaces.INInteractionObject<FluidTransmitterBlockEntity>
 {
 
     private final int WORK_MODIFIER = 20;
@@ -53,7 +54,10 @@ public class FluidTransmitterBlockEntity extends RedstoneSensitiveBlockEntity im
     private final int CONNECT_DISTANCE = 16;
     private FilterMethod filterMethod;
     private int prevTargetIndex;
+    public static final int MAX_TRANSFER = 10000;
+    public static final int MIN_TRANSFER = 1;
     private int transferAmount = 10;
+
     private final SimpleItemHandler handler = new SimpleItemHandler(new IInventoryCallback()
     {
         @Override
@@ -206,7 +210,7 @@ public class FluidTransmitterBlockEntity extends RedstoneSensitiveBlockEntity im
         FluidTransportHandler.Transport tsr = new FluidTransportHandler.Transport(this.level, route.getFirst(), route, transferStack);
 
         FluidTransportHandler.getTransportData(false).putIfAbsent(tsr.getId(), tsr);
-        PacketDistributor.sendToAllPlayers(new S2CPacketCreateFluidTransport(tsr));
+        PacketDistributor.sendToAllPlayers(new S2CCreateFluidTransportPacket(tsr));
     }
 
     private void clearRemovedPoses()
@@ -290,6 +294,11 @@ public class FluidTransmitterBlockEntity extends RedstoneSensitiveBlockEntity im
         return transferAmount;
     }
 
+    public void setTransferAmount(int transferAmount)
+    {
+        this.transferAmount = transferAmount;
+    }
+
     public SimpleItemHandler getHandler()
     {
         return handler;
@@ -303,6 +312,15 @@ public class FluidTransmitterBlockEntity extends RedstoneSensitiveBlockEntity im
     public List<BlockPos> getAttachedPoses()
     {
         return attachedPoses;
+    }
+
+    public @NotNull FilterMethod getFilterMethod() {
+        return filterMethod;
+    }
+
+    public void setFilterMethod(@NotNull FilterMethod filterMethod)
+    {
+        this.filterMethod = filterMethod;
     }
 
     @Override
@@ -344,5 +362,23 @@ public class FluidTransmitterBlockEntity extends RedstoneSensitiveBlockEntity im
         tag.putInt(NDatabase.BlocksInfo.BlockEntities.TagAddress.Machines.FluidTransmitter.PREV_TARGET_INDEX, prevTargetIndex);
         tag.putInt(NDatabase.BlocksInfo.BlockEntities.TagAddress.Machines.FluidTransmitter.TRANSFER_AMOUNT, transferAmount);
         tag.put(NDatabase.CapabilitiesInfo.InventoryInfo.CAPABILITY_NAME, handler.serializeNBT(registries));
+    }
+
+    @Override
+    public @Nullable FluidTransmitterBlockEntity getGuiMaster()
+    {
+        return this;
+    }
+
+    @Override
+    public NRegistration.NMenuTypes.ArgContainer<FluidTransmitterBlockEntity, FluidTransmitterContainer> getContainerType()
+    {
+        return NRegistration.NMenuTypes.FLUID_TRANSMITTER;
+    }
+
+    @Override
+    public boolean canUseGui(Player player)
+    {
+        return true;
     }
 }

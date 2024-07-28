@@ -9,20 +9,40 @@
 
 package com.arcanc.nedaire.util.helpers;
 
+import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.platform.Lighting;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.LightTexture;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.entity.ItemRenderer;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.InventoryMenu;
+import net.minecraft.world.item.ItemDisplayContext;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.joml.Matrix4f;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class RenderHelper
 {
+    private static final RenderType TRANSLUCENT = RenderType.entityTranslucentCull(InventoryMenu.BLOCK_ATLAS);
+
     public static @NotNull Minecraft mc()
     {
         return Minecraft.getInstance();
@@ -43,6 +63,165 @@ public class RenderHelper
         return textureMap().getSprite(location);
     }
 
+    public static @NotNull ItemRenderer renderItem()
+    {
+        return mc().getItemRenderer();
+    }
+
+    public static void renderItemStack(GuiGraphics guiGraphics, ItemStack stack, int x, int y, boolean overlay)
+    {
+        renderItemStack(guiGraphics, stack, x, y, overlay, null);
+    }
+
+    public static void renderItemStack(@NotNull GuiGraphics guiGraphics, @NotNull ItemStack stack, int x, int y, boolean overlay, String count)
+    {
+        if(!stack.isEmpty())
+        {
+            // Counteract the zlevel increase, because multiplied with the matrix, it goes out of view
+            guiGraphics.renderItem(stack, x, y, 0,-50);
+
+            if(overlay)
+            {
+                // Use the Item's font renderer, if available
+                Font font = IClientItemExtensions.of(stack.getItem()).getFont(stack, IClientItemExtensions.FontContext.ITEM_COUNT);
+                font = font != null ? font : mc().font;
+                guiGraphics.renderItemDecorations(font, stack, x, y, count);
+            }
+        }
+    }
+
+    public static void renderFakeItemTransparent(@NotNull ItemStack stack, int x, int y, float alpha)
+    {
+        renderFakeItemColored(stack, x, y, 1F, 1F, 1F, alpha);
+    }
+
+    public static void renderFakeItemColored(@NotNull ItemStack stack, int x, int y, float red, float green, float blue, float alpha)
+    {
+        if (stack.isEmpty())
+            return;
+
+        Minecraft mc = mc();
+        BakedModel model = renderItem().getModel(stack, null, mc.player, 0);
+        renderItemModel(stack, x, y, red, green, blue, alpha, model);
+    }
+
+    /**
+     * {@link ItemRenderer::renderGuiItem} but with color
+     */
+    public static void renderItemModel(@NotNull ItemStack stack, int x, int y, float red, float green, float blue, float alpha, @NotNull BakedModel model)
+    {
+        mc().getTextureManager().getTexture(InventoryMenu.BLOCK_ATLAS).setFilter(false, false);
+
+        RenderSystem.setShaderTexture(0, InventoryMenu.BLOCK_ATLAS);
+
+        RenderSystem.enableBlend();
+        RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+
+        /*FIXME: проверить, подходит ли этот поз стак или найти другой*/
+        PoseStack modelViewStack = new PoseStack();//RenderSystem.getModelViewStack();
+        modelViewStack.pushPose();
+        modelViewStack.translate(x, y, 100.0F);
+        modelViewStack.translate(8.0D, 8.0D, 0.0D);
+        modelViewStack.scale(1.0F, -1.0F, 1.0F);
+        modelViewStack.scale(16.0F, 16.0F, 16.0F);
+        RenderSystem.applyModelViewMatrix();
+
+        boolean flatLight = !model.usesBlockLight();
+        if (flatLight)
+            Lighting.setupForFlatItems();
+
+        MultiBufferSource.BufferSource buffer = mc().renderBuffers().bufferSource();
+        renderItem().render(
+                stack,
+                ItemDisplayContext.GUI,
+                false,
+                new PoseStack(),
+                wrapBuffer(buffer, red, green, blue, alpha, alpha < 1F),
+                LightTexture.FULL_BRIGHT,
+                OverlayTexture.NO_OVERLAY,
+                model
+        );
+        buffer.endBatch();
+
+        RenderSystem.enableDepthTest();
+
+        if (flatLight)
+            Lighting.setupFor3DItems();
+
+        modelViewStack.popPose();
+        RenderSystem.applyModelViewMatrix();
+    }
+
+    @Contract(pure = true)
+    private static @NotNull MultiBufferSource wrapBuffer(MultiBufferSource buffer, float red, float green, float blue, float alpha, boolean forceTranslucent)
+    {
+        return renderType -> new TintedVertexConsumer(buffer.getBuffer(forceTranslucent ? TRANSLUCENT : renderType), red, green, blue, alpha);
+    }
+
+    public static final class TintedVertexConsumer implements VertexConsumer
+    {
+        private final VertexConsumer wrapped;
+        private final float red;
+        private final float green;
+        private final float blue;
+        private final float alpha;
+
+        public TintedVertexConsumer(VertexConsumer wrapped, float red, float green, float blue, float alpha)
+        {
+            this.wrapped = wrapped;
+            this.red = red;
+            this.green = green;
+            this.blue = blue;
+            this.alpha = alpha;
+        }
+
+        public TintedVertexConsumer(VertexConsumer wrapped, int red, int green, int blue, int alpha)
+        {
+            this(wrapped, red / 255F, green / 255F, blue / 255F, alpha / 255F);
+        }
+
+        @Override
+        public @NotNull VertexConsumer addVertex(float x, float y, float z)
+        {
+            return wrapped.addVertex(x, y, z);
+        }
+
+        @Override
+        public @NotNull VertexConsumer setColor(int red, int green, int blue, int alpha)
+        {
+            return wrapped.setColor(
+                    (int) (red * this.red),
+                    (int) (green * this.green),
+                    (int) (blue * this.blue),
+                    (int) (alpha * this.alpha)
+            );
+        }
+
+        @Override
+        public @NotNull VertexConsumer setUv(float u, float v)
+        {
+            return wrapped.setUv(u, v);
+        }
+
+        @Override
+        public @NotNull VertexConsumer setUv1(int u, int v)
+        {
+            return wrapped.setUv1(u, v);
+        }
+
+        @Override
+        public @NotNull VertexConsumer setUv2(int u, int v)
+        {
+            return wrapped.setUv2(u, v);
+        }
+
+        @Override
+        public @NotNull VertexConsumer setNormal(float x, float y, float z)
+        {
+            return wrapped.setNormal(x, y, z);
+        }
+    }
 
     public static @NotNull List<Vec3> getSpiralAroundVector(@NotNull Vec3 startPos, @NotNull Vec3 finishPos, float radius, int steps, int turns)
     {
@@ -165,5 +344,35 @@ public class RenderHelper
         int a = (color >> 24) & 0xFF;
 
         return new int[] { r, g, b, a };
+    }
+
+    public static void blit(GuiGraphics guiGraphics, ResourceLocation location, float posX, float posY, float posZ, float sizeX, float sizeY, int uStart, int uSize, int vStart, int vSize, int textureSizeX, int textureSizeY)
+    {
+        blit(guiGraphics, location, posX, posY, posZ, sizeX, sizeY, uStart, uSize, vStart, vSize, textureSizeX, textureSizeY, 1.0f, 1.0f, 1.0f, 1.0f);
+    }
+
+    public static void blit(@NotNull GuiGraphics guiGraphics, ResourceLocation location, float posX, float posY, float posZ, float sizeX, float sizeY, int uStart, int uSize, int vStart, int vSize, int textureSizeX, int textureSizeY, float red, float green, float blue, float alpha)
+    {
+        RenderSystem.setShaderTexture(0, location);
+        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+
+        float posXFinish = posX + sizeX;
+        float posYFinish = posY + sizeY;
+
+        float uScaledStart = uStart / (float)textureSizeX;
+        float uScaledFinish = (uStart + uSize) / (float)textureSizeX;
+        float vScaledStart = vStart / (float)textureSizeY;
+        float vScaledFinish = (vStart + vSize) / (float)textureSizeY;
+
+        Matrix4f matrix4f = guiGraphics.pose().last().pose();
+        BufferBuilder bufferbuilder = Tesselator.getInstance().begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        bufferbuilder.addVertex(matrix4f, posX,       posY,       posZ).setColor(red, green, blue, alpha).setUv(uScaledStart,  vScaledStart);
+        bufferbuilder.addVertex(matrix4f, posX,       posYFinish, posZ).setColor(red, green, blue, alpha).setUv(uScaledStart,  vScaledFinish);
+        bufferbuilder.addVertex(matrix4f, posXFinish, posYFinish, posZ).setColor(red, green, blue, alpha).setUv(uScaledFinish, vScaledFinish);
+        bufferbuilder.addVertex(matrix4f, posXFinish, posY,       posZ).setColor(red, green, blue, alpha).setUv(uScaledFinish, vScaledStart);
+        BufferUploader.drawWithShader(bufferbuilder.buildOrThrow());
+        RenderSystem.disableBlend();
     }
 }

@@ -24,10 +24,10 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public record S2CPacketContainerData(List<Pair<Integer, GenericDataSerializers.DataPair<?>>> synced) implements IPacket
+public record S2CContainerDataPacket(List<Pair<Integer, GenericDataSerializers.DataPair<?>>> synced) implements IPacket
 {
-    public static final CustomPacketPayload.Type<S2CPacketContainerData> TYPE = new CustomPacketPayload.Type<>(NDatabase.modRL("message_container_data"));
-    public static final StreamCodec<RegistryFriendlyByteBuf, S2CPacketContainerData> STREAM_CODEC = StreamCodec.composite(
+    public static final CustomPacketPayload.Type<S2CContainerDataPacket> TYPE = new CustomPacketPayload.Type<>(NDatabase.modRL("message_container_data"));
+    public static final StreamCodec<RegistryFriendlyByteBuf, S2CContainerDataPacket> STREAM_CODEC = StreamCodec.composite(
             StreamCodec.of(
                     (pBuffer, pValue) -> PacketHelper.writeList(pBuffer, pValue,
                         (pair, buf) ->
@@ -36,8 +36,8 @@ public record S2CPacketContainerData(List<Pair<Integer, GenericDataSerializers.D
                             pair.getSecond().write(buf);
                         }),
                     pBuffer -> PacketHelper.readList(pBuffer, pb -> Pair.of(pb.readVarInt(), GenericDataSerializers.read(pb)))),
-            S2CPacketContainerData:: synced,
-            S2CPacketContainerData:: new
+            S2CContainerDataPacket:: synced,
+            S2CContainerDataPacket:: new
             );
 
     /*public S2CPacketContainerData(List<Pair<Integer, GenericDataSerializers.DataPair<?>>> synced)
@@ -57,7 +57,7 @@ public record S2CPacketContainerData(List<Pair<Integer, GenericDataSerializers.D
     }
 
     @Override
-    public @NotNull Type<S2CPacketContainerData> type()
+    public @NotNull Type<S2CContainerDataPacket> type()
     {
         return TYPE;
     }

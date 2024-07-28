@@ -22,7 +22,7 @@ public class NBaseItem extends Item implements ItemInterfaces.IMustAddToCreative
     @Override
     public @NotNull String getDescriptionId()
     {
-        return ItemHelper.getRegistryName(this).toString().replace(':', '.').replace('/', '.');
+        return ItemHelper.getRegistryName(this).withPrefix("item.").toLanguageKey().replace(':', '.').replace('/', '.');
     }
 
     @Override

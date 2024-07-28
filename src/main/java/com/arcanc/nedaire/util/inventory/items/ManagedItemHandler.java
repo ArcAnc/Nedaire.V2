@@ -10,7 +10,6 @@
 package com.arcanc.nedaire.util.inventory.items;
 
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.items.IItemHandler;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -25,10 +24,10 @@ public class ManagedItemHandler extends SimpleItemHandler
     protected List<ItemStackHolder> modifierSlots;
 
 
-    protected IItemHandler inputHandler;
-    protected IItemHandler outputHandler;
-    protected IItemHandler modifierHandler;
-    protected IItemHandler allHandler;
+    protected SimpleItemHandler inputHandler;
+    protected SimpleItemHandler outputHandler;
+    protected SimpleItemHandler modifierHandler;
+    protected SimpleItemHandler allHandler;
 
     public ManagedItemHandler (@Nullable IInventoryCallback callback)
     {
@@ -77,7 +76,7 @@ public class ManagedItemHandler extends SimpleItemHandler
     }
 
     @Override
-    public IItemHandler getHandler(@NotNull SlotType type)
+    public SimpleItemHandler getHandler(@NotNull SlotType type)
     {
         return switch (type)
         {

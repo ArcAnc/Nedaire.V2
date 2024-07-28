@@ -9,9 +9,8 @@
 
 package com.arcanc.nedaire.util.handlers;
 
-import com.arcanc.nedaire.Nedaire;
 import com.arcanc.nedaire.content.block.block_entity.FluidTransmitterBlockEntity;
-import com.arcanc.nedaire.content.nerwork.messages.packets.S2CPacketCreateFluidTransport;
+import com.arcanc.nedaire.content.nerwork.messages.packets.S2CCreateFluidTransportPacket;
 import com.arcanc.nedaire.util.NDatabase;
 import com.arcanc.nedaire.util.helpers.BlockHelper;
 import com.arcanc.nedaire.util.helpers.Codecs;
@@ -291,7 +290,7 @@ public class FluidTransportHandler
             FluidTransportHandler.Transport tsr = new FluidTransportHandler.Transport(this.level, route.getFirst(), route, fluidStack);
 
             FluidTransportHandler.getTransportData(false).putIfAbsent(tsr.getId(), tsr);
-            PacketDistributor.sendToAllPlayers(new S2CPacketCreateFluidTransport(tsr));
+            PacketDistributor.sendToAllPlayers(new S2CCreateFluidTransportPacket(tsr));
         }
 
         public CompoundTag saveTransport()

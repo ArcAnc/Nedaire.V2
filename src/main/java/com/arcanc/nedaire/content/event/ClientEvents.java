@@ -15,10 +15,12 @@ import com.arcanc.nedaire.content.block.ber.NodeRenderer;
 import com.arcanc.nedaire.content.block.model_loaders.FluidStorageBakedModel;
 import com.arcanc.nedaire.content.fluid.NEnergonFluidType;
 import com.arcanc.nedaire.content.fluid.NFluidType;
+import com.arcanc.nedaire.content.gui.screen.FluidTransmitterScreen;
 import com.arcanc.nedaire.content.items.NBucketItem;
 import com.arcanc.nedaire.registration.NRegistration;
 import com.arcanc.nedaire.util.handlers.FluidTransportHandler;
 import com.arcanc.nedaire.util.model.SimpleModel;
+import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
 import net.neoforged.bus.api.IEventBus;
@@ -26,6 +28,7 @@ import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.ModelEvent;
 import net.neoforged.neoforge.client.event.RegisterColorHandlersEvent;
+import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.registries.DeferredHolder;
@@ -36,6 +39,7 @@ public class ClientEvents
     public static void registerClientEvents(final @NotNull IEventBus modEventBus)
     {
         modEventBus.addListener(ClientEvents :: registerBlockEntityRenderers);
+        modEventBus.addListener(ClientEvents :: registerMenuScreens);
         modEventBus.addListener(ClientEvents :: setupClient);
         modEventBus.addListener(ClientEvents :: setupItemColor);
         modEventBus.addListener(ClientEvents :: setupModels);
@@ -74,6 +78,11 @@ public class ClientEvents
                         ItemBlockRenderTypes.setRenderLayer(fluid, RenderType.translucent());
                     });
         });
+    }
+
+    private static void registerMenuScreens(@NotNull RegisterMenuScreensEvent event)
+    {
+        event.register(NRegistration.NMenuTypes.FLUID_TRANSMITTER.getType(), FluidTransmitterScreen ::new);
     }
 
     private static void setupItemColor(final @NotNull RegisterColorHandlersEvent.Item event)

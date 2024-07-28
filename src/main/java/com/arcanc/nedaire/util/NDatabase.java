@@ -10,6 +10,7 @@
 package com.arcanc.nedaire.util;
 
 import net.minecraft.resources.ResourceLocation;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Function;
@@ -237,6 +238,77 @@ public class NDatabase
         public static final String IS_MASTER = nameBuilder.apply("is_master");
         public static final String MASTER_POS = nameBuilder.apply("master_pos");
     }
+
+    public static final class GUIInfo
+    {
+        public static final String PATH = "gui/";
+
+        public static final class Filter
+        {
+            public static final String FILTER = PATH + "filter/filter";
+        }
+
+        public static final class Descriptions
+        {
+            public static final String PATH = GUIInfo.PATH.replace('/', '.') + "description.";
+            public static final class Filter
+            {
+                private static final String BUTTON = PATH + "button.";
+                public static final String BUTTON_PLUS = BUTTON + "plus";
+                public static final String BUTTON_MINUS = BUTTON + "minus";
+
+                public static final String BUTTON_LIST_TYPE = BUTTON + "list_type";
+                public static final String BUTTON_ROUTE = BUTTON + "route";
+                public static final String BUTTON_NBT = BUTTON + "nbt";
+                public static final String BUTTON_TAG = BUTTON + "tag";
+                public static final String BUTTON_MOD_OWNER = BUTTON + "mod_owner";
+                public static final String BUTTON_TARGET = BUTTON + "target";
+            }
+
+            public static @NotNull String getDescription(String str)
+            {
+                return modRLStr(str).replace(':', '.').replace('/', '.');
+            }
+        }
+
+        public static final class Background
+        {
+            public static final String PATH = GUIInfo.PATH + "background/";
+            public static final class Textures
+            {
+                public static final String MIDDLE = Background.PATH + "middle";
+
+                public static final String MIDDLE_LEFT = MIDDLE + "_left";
+                public static final String MIDDLE_RIGHT = MIDDLE + "_right";
+                public static final String MIDDLE_TOP = MIDDLE + "_top";
+                public static final String MIDDLE_BOTTOM = MIDDLE + "_bottom";
+
+                public static final String LEFT_TOP = Background.PATH + "corner_left_top";
+                public static final String LEFT_BOTTOM = Background.PATH + "corner_left_bottom";
+                public static final String RIGHT_TOP = Background.PATH + "corner_right_top";
+                public static final String RIGHT_BOTTOM = Background.PATH + "corner_right_bottom";
+            }
+        }
+
+        public static final class Slots
+        {
+            public static final String PATH = GUIInfo.PATH + "slots/";
+            public static final class Textures
+            {
+                public static final String STANDARD = PATH + "standard";
+                public static final String INPUT = PATH + "input";
+                public static final String OUTPUT = PATH + "output";
+                public static final String BOTH = PATH + "both";
+            }
+        }
+
+        @Contract("_ -> new")
+        public static @NotNull ResourceLocation getTexturePath(String str)
+        {
+            return modRL("textures/" + str + ".png");
+        }
+    }
+
     public static @NotNull ResourceLocation modRL(@NotNull String s)
     {
         return ResourceLocation.fromNamespaceAndPath(MOD_ID, s);

@@ -62,7 +62,7 @@ public class NBlockBase extends Block implements SimpleWaterloggedBlock
     @Override
     public @NotNull String getDescriptionId()
     {
-        return BlockHelper.getRegistryName(this).toString().replace(':', '.').replace('/', '.');
+        return BlockHelper.getRegistryName(this).withPrefix("block.").toLanguageKey().replace(':', '.').replace('/', '.');
     }
 
     /**

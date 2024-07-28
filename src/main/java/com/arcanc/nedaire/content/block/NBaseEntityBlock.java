@@ -108,7 +108,7 @@ public class NBaseEntityBlock<T extends BlockEntity> extends NBlockBase implemen
                     interaction = interaction.getGuiMaster();
                     if(interaction != null && interaction.canUseGui(player))
                     {
-                        serverPlayer.openMenu(interaction);
+                        serverPlayer.openMenu(interaction, byteBuf -> byteBuf.writeBlockPos(pos));
                     }
                 }
                 else

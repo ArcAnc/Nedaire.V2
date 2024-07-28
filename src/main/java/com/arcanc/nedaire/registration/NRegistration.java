@@ -20,6 +20,7 @@ import com.arcanc.nedaire.content.block.block_entity.NodeBlockEntity;
 import com.arcanc.nedaire.content.fluid.NEnergonFluidType;
 import com.arcanc.nedaire.content.fluid.NFluid;
 import com.arcanc.nedaire.content.fluid.NFluidType;
+import com.arcanc.nedaire.content.gui.container_menu.FluidTransmitterContainer;
 import com.arcanc.nedaire.content.gui.container_menu.NContainerMenu;
 import com.arcanc.nedaire.content.items.*;
 import com.arcanc.nedaire.util.NDatabase;
@@ -42,6 +43,7 @@ import net.minecraft.tags.TagKey;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.flag.FeatureFlagSet;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.*;
@@ -56,6 +58,7 @@ import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.level.material.Fluid;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.common.SoundActions;
+import net.neoforged.neoforge.common.extensions.IMenuTypeExtension;
 import net.neoforged.neoforge.fluids.BaseFlowingFluid;
 import net.neoforged.neoforge.fluids.FluidType;
 import net.neoforged.neoforge.registries.DeferredHolder;
@@ -559,6 +562,33 @@ public class NRegistration
     {
         public static final DeferredRegister<MenuType<?>> MENU_TYPES = DeferredRegister.create(BuiltInRegistries.MENU, NDatabase.MOD_ID);
 
+        public static final ArgContainer<FluidTransmitterBlockEntity, FluidTransmitterContainer> FLUID_TRANSMITTER = registerArg(
+                NDatabase.BlocksInfo.Names.FLUID_TRANSMITTER,
+                FluidTransmitterContainer :: makeServer,
+                FluidTransmitterContainer :: makeClient);
+
+
+        public static <T, C extends NContainerMenu>
+        @NotNull ArgContainer<T, C> registerArg(
+                String name, ArgContainerConstructor<T, C> container, ClientContainerConstructor<C> client
+        )
+        {
+            DeferredHolder<MenuType<?>, MenuType<C>> typeRef = registerType(name, client);
+            return new ArgContainer<>(typeRef, container);
+        }
+
+        private static <C extends NContainerMenu>
+        @NotNull DeferredHolder<MenuType<?>, MenuType<C>> registerType(String name, ClientContainerConstructor<C> client)
+        {
+            return MENU_TYPES.register(
+                    name, () -> {
+                        Mutable<MenuType<C>> typeBox = new MutableObject<>();
+                        MenuType<C> type = IMenuTypeExtension.create((id, inv, data) -> client.construct(typeBox.getValue(), id, inv, data.readBlockPos()));
+                        typeBox.setValue(type);
+                        return type;
+                    }
+            );
+        }
 
         public static class ArgContainer<T, C extends NContainerMenu>
         {
@@ -607,6 +637,11 @@ public class NRegistration
         public interface ArgContainerConstructor<T, C extends NContainerMenu>
         {
             C construct(MenuType<C> type, int windowId, Inventory inventoryPlayer, T te);
+        }
+
+        public interface ClientContainerConstructor<C extends NContainerMenu>
+        {
+            C construct(MenuType<C> type, int windowId, Inventory inventoryPlayer, BlockPos pos);
         }
 
         public static void init(final IEventBus modEventBus)

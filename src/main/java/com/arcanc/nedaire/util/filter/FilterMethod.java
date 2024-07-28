@@ -51,7 +51,7 @@ public record FilterMethod(ListType list, Route route, NBT nbt, TagCheck tag, Mo
         return set;
     };
 
-    public enum ListType
+    public enum ListType implements FilterType<ListType>
     {
         ALLOW((iItemHandler, stack) ->
         {
@@ -90,12 +90,48 @@ public record FilterMethod(ListType list, Route route, NBT nbt, TagCheck tag, Mo
         {
             return predicate.test(handler, stack);
         }
+
+        @Override
+        public ListType getValue()
+        {
+            return this;
+        }
+
+        @Override
+        public int size()
+        {
+            return possibleValues().length;
+        }
+
+        @Override
+        public ListType @NotNull [] possibleValues()
+        {
+            return ListType.values();
+        }
     }
-    public enum Route
+    public enum Route implements FilterType<Route>
     {
         INPUT, OUTPUT, BIDIRECTION;
+
+        @Override
+        public Route getValue()
+        {
+            return this;
+        }
+
+        @Override
+        public int size()
+        {
+            return possibleValues().length;
+        }
+
+        @Override
+        public @NotNull Route[] possibleValues()
+        {
+            return Route.values();
+        }
     }
-    public enum NBT
+    public enum NBT implements FilterType<NBT>
     {
         CHECK_NBT (((iItemHandler, stack) ->
         {
@@ -128,8 +164,26 @@ public record FilterMethod(ListType list, Route route, NBT nbt, TagCheck tag, Mo
         {
             return this.predicate.test(handler, stack);
         }
+
+        @Override
+        public NBT getValue()
+        {
+            return this;
+        }
+
+        @Override
+        public int size()
+        {
+            return possibleValues().length;
+        }
+
+        @Override
+        public @NotNull NBT[] possibleValues()
+        {
+            return NBT.values();
+        }
     }
-    public enum TagCheck
+    public enum TagCheck implements FilterType<TagCheck>
     {
         USE ((iItemHandler, stack) ->
         {
@@ -166,8 +220,26 @@ public record FilterMethod(ListType list, Route route, NBT nbt, TagCheck tag, Mo
         {
             return this.predicate.test(handler, stack);
         }
+
+        @Override
+        public TagCheck getValue()
+        {
+            return this;
+        }
+
+        @Override
+        public int size()
+        {
+            return possibleValues().length;
+        }
+
+        @Override
+        public @NotNull TagCheck[] possibleValues()
+        {
+            return TagCheck.values();
+        }
     }
-    public enum ModOwner
+    public enum ModOwner implements FilterType<ModOwner>
     {
         USE((iItemHandler, stack) ->
         {
@@ -203,10 +275,46 @@ public record FilterMethod(ListType list, Route route, NBT nbt, TagCheck tag, Mo
         {
             return this.predicate.test(handler, stack);
         }
+
+        @Override
+        public ModOwner getValue()
+        {
+            return this;
+        }
+
+        @Override
+        public int size()
+        {
+            return possibleValues().length;
+        }
+
+        @Override
+        public ModOwner[] possibleValues()
+        {
+            return ModOwner.values();
+        }
     }
-    public enum Target
+    public enum Target implements FilterType<Target>
     {
         NEAREST_FIRST, FURTHERS_FIRST, RANDOM, ROUND_ROBIN;
+
+        @Override
+        public Target getValue()
+        {
+            return this;
+        }
+
+        @Override
+        public int size()
+        {
+            return possibleValues().length;
+        }
+
+        @Override
+        public Target[] possibleValues()
+        {
+            return Target.values();
+        }
     }
 
     public static @NotNull FilterMethod copy(@NotNull FilterMethod method)
