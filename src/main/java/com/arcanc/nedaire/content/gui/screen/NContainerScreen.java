@@ -177,7 +177,7 @@ public abstract class NContainerScreen<T extends NContainerMenu> extends Abstrac
 
             RenderSystem.enableDepthTest();
             if (slot instanceof NSlot.ItemHandlerGhost)
-                RenderHelper.renderFakeItemTransparent(itemstack, getGuiLeft() + i, getGuiTop() + j, 0.5f);
+                RenderHelper.renderFakeItemTransparent(guiGraphics, itemstack, getGuiLeft() + i, getGuiTop() + j, 0.5f);
             else
             {
                 guiGraphics.renderItem(itemstack, i, j, slot.x + slot.y * this.imageWidth);

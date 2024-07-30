@@ -23,6 +23,7 @@ import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import org.jetbrains.annotations.NotNull;
@@ -44,84 +45,15 @@ public class FluidTransmitterScreen extends NContainerScreen<FluidTransmitterCon
         this.imageWidth =  185;
     }
 
-    /*FIXME: заменить кнопку и допилить кнопки изменения типа фильтрации. Кстати, надо проверить саму фильтрацию*/
-
-    @SuppressWarnings("unchecked")
     @Override
     protected void init()
     {
         super.init();
 
-        this.addRenderableWidget(buttonMinus = new IconButton(getGuiLeft() + 116, getGuiTop() + 20, 14, 14, IconSet.of(
-                FILTER_GUI,
-                1,
-                32,
-                128,
-                32,
-                32),
-                button ->
-                {
-                    FluidTransmitterBlockEntity blockEntity = getMenu().blockEntity;
-
-                    int value = blockEntity.getTransferAmount();
-
-                    if (hasShiftDown() && hasControlDown())
-                        value -= 1000;
-                    else if (hasShiftDown())
-                        value -= 100;
-                    else if (hasControlDown())
-                        value -= 10;
-                    else
-                        value --;
-
-                    if (value <= FluidTransmitterBlockEntity.MIN_TRANSFER)
-                    {
-                        value = FluidTransmitterBlockEntity.MIN_TRANSFER;
-                        button.active = false;
-                    }
-
-                    buttonPlus.active = true;
-
-                    int finalValue = value;
-                    sendTransmitterUpdate(tag -> tag.putInt(NDatabase.BlocksInfo.BlockEntities.TagAddress.Machines.FluidTransmitter.TRANSFER_AMOUNT, finalValue));
-                },
-                Tooltip.create(Component.translatable(NDatabase.GUIInfo.Descriptions.getDescription(NDatabase.GUIInfo.Descriptions.Filter.BUTTON_MINUS))),
-                messageSupplier -> Component.translatable(NDatabase.GUIInfo.Descriptions.getDescription(NDatabase.GUIInfo.Descriptions.Filter.BUTTON_MINUS))));
-
-        this.addRenderableWidget(buttonPlus = new IconButton(getGuiLeft() + 165, getGuiTop() + 20, 14, 14, IconSet.of(
-                FILTER_GUI,
-                1,
-                0,
-                128,
-                32,
-                32),
-                button ->
-                {
-                    FluidTransmitterBlockEntity blockEntity = getMenu().blockEntity;
-
-                    int value = blockEntity.getTransferAmount();
-
-                    if (hasShiftDown() && hasControlDown())
-                        value += 1000;
-                    else if (hasShiftDown())
-                        value += 100;
-                    else if (hasControlDown())
-                        value += 10;
-                    else
-                        value ++;
-
-                    if (value >= FluidTransmitterBlockEntity.MAX_TRANSFER)
-                    {
-                        value = FluidTransmitterBlockEntity.MAX_TRANSFER;
-                        button.active = false;
-                    }
-
-                    buttonMinus.active = true;
-                    int finalValue = value;
-                    sendTransmitterUpdate(tag -> tag.putInt(NDatabase.BlocksInfo.BlockEntities.TagAddress.Machines.FluidTransmitter.TRANSFER_AMOUNT, finalValue));
-                },
-                Tooltip.create(Component.translatable(NDatabase.GUIInfo.Descriptions.getDescription(NDatabase.GUIInfo.Descriptions.Filter.BUTTON_PLUS))),
-                messageSupplier -> Component.translatable(NDatabase.GUIInfo.Descriptions.getDescription(NDatabase.GUIInfo.Descriptions.Filter.BUTTON_PLUS))));
+        buttonMinus = createIconButton(116, 20, FILTER_GUI, 32, 128, this::decreaseTransferAmount,
+                NDatabase.GUIInfo.Descriptions.Filter.BUTTON_MINUS);
+        buttonPlus = createIconButton(165, 20, FILTER_GUI, 0, 128, this::increaseTransferAmount,
+                NDatabase.GUIInfo.Descriptions.Filter.BUTTON_PLUS);
 
         buttonMinus.active = getMenu().blockEntity.getTransferAmount() >= FluidTransmitterBlockEntity.MIN_TRANSFER;
         buttonPlus.active = getMenu().blockEntity.getTransferAmount() <= FluidTransmitterBlockEntity.MAX_TRANSFER;
@@ -149,10 +81,11 @@ public class FluidTransmitterScreen extends NContainerScreen<FluidTransmitterCon
 
                     FilterMethod finalMethod = method;
                     button.setData(method.list());
+                    button.setTooltip(Tooltip.create(Component.translatable(NDatabase.GUIInfo.Descriptions.getDescription(NDatabase.GUIInfo.Descriptions.Filter.BUTTON_LIST_TYPE[button.getData().getValue().ordinal()]))));
+
                     sendTransmitterUpdate(tag -> tag.put(NDatabase.BlocksInfo.BlockEntities.TagAddress.Machines.Filter.FILTER_TAG, finalMethod.writeToNbt()));
                 },
-                Tooltip.create(Component.translatable(NDatabase.GUIInfo.Descriptions.getDescription(NDatabase.GUIInfo.Descriptions.Filter.BUTTON_LIST_TYPE))),
-                messageSupplier -> Component.translatable(NDatabase.GUIInfo.Descriptions.getDescription(NDatabase.GUIInfo.Descriptions.Filter.BUTTON_LIST_TYPE))));
+                NDatabase.GUIInfo.Descriptions.Filter.BUTTON_LIST_TYPE));
 
         this.addRenderableWidget(new FilterEnumButton<>(
                 getGuiLeft() + 134,
@@ -177,10 +110,11 @@ public class FluidTransmitterScreen extends NContainerScreen<FluidTransmitterCon
 
                     FilterMethod finalMethod = method;
                     button.setData(method.route());
+                    button.setTooltip(Tooltip.create(Component.translatable(NDatabase.GUIInfo.Descriptions.getDescription(NDatabase.GUIInfo.Descriptions.Filter.BUTTON_ROUTE[button.getData().getValue().ordinal()]))));
+
                     sendTransmitterUpdate(tag -> tag.put(NDatabase.BlocksInfo.BlockEntities.TagAddress.Machines.Filter.FILTER_TAG, finalMethod.writeToNbt()));
                 },
-                Tooltip.create(Component.translatable(NDatabase.GUIInfo.Descriptions.getDescription(NDatabase.GUIInfo.Descriptions.Filter.BUTTON_ROUTE))),
-                messageSupplier -> Component.translatable(NDatabase.GUIInfo.Descriptions.getDescription(NDatabase.GUIInfo.Descriptions.Filter.BUTTON_ROUTE))));
+                NDatabase.GUIInfo.Descriptions.Filter.BUTTON_ROUTE));
 
         this.addRenderableWidget(new FilterEnumButton<>(
                 getGuiLeft() + 152,
@@ -205,10 +139,11 @@ public class FluidTransmitterScreen extends NContainerScreen<FluidTransmitterCon
 
                     FilterMethod finalMethod = method;
                     button.setData(method.nbt());
+                    button.setTooltip(Tooltip.create(Component.translatable(NDatabase.GUIInfo.Descriptions.getDescription(NDatabase.GUIInfo.Descriptions.Filter.BUTTON_NBT[button.getData().getValue().ordinal()]))));
+
                     sendTransmitterUpdate(tag -> tag.put(NDatabase.BlocksInfo.BlockEntities.TagAddress.Machines.Filter.FILTER_TAG, finalMethod.writeToNbt()));
                 },
-                Tooltip.create(Component.translatable(NDatabase.GUIInfo.Descriptions.getDescription(NDatabase.GUIInfo.Descriptions.Filter.BUTTON_NBT))),
-                messageSupplier -> Component.translatable(NDatabase.GUIInfo.Descriptions.getDescription(NDatabase.GUIInfo.Descriptions.Filter.BUTTON_NBT))));
+                NDatabase.GUIInfo.Descriptions.Filter.BUTTON_NBT));
 
         this.addRenderableWidget(new FilterEnumButton<>(
                 getGuiLeft() + 116,
@@ -233,10 +168,11 @@ public class FluidTransmitterScreen extends NContainerScreen<FluidTransmitterCon
 
                     FilterMethod finalMethod = method;
                     button.setData(method.tag());
+                    button.setTooltip(Tooltip.create(Component.translatable(NDatabase.GUIInfo.Descriptions.getDescription(NDatabase.GUIInfo.Descriptions.Filter.BUTTON_TAG[button.getData().getValue().ordinal()]))));
+
                     sendTransmitterUpdate(tag -> tag.put(NDatabase.BlocksInfo.BlockEntities.TagAddress.Machines.Filter.FILTER_TAG, finalMethod.writeToNbt()));
                 },
-                Tooltip.create(Component.translatable(NDatabase.GUIInfo.Descriptions.getDescription(NDatabase.GUIInfo.Descriptions.Filter.BUTTON_TAG))),
-                messageSupplier -> Component.translatable(NDatabase.GUIInfo.Descriptions.getDescription(NDatabase.GUIInfo.Descriptions.Filter.BUTTON_TAG))));
+                NDatabase.GUIInfo.Descriptions.Filter.BUTTON_TAG));
 
         this.addRenderableWidget(new FilterEnumButton<>(
                 getGuiLeft() + 134,
@@ -261,10 +197,11 @@ public class FluidTransmitterScreen extends NContainerScreen<FluidTransmitterCon
 
                     FilterMethod finalMethod = method;
                     button.setData(method.owner());
+                    button.setTooltip(Tooltip.create(Component.translatable(NDatabase.GUIInfo.Descriptions.getDescription(NDatabase.GUIInfo.Descriptions.Filter.BUTTON_MOD_OWNER[button.getData().getValue().ordinal()]))));
+
                     sendTransmitterUpdate(tag -> tag.put(NDatabase.BlocksInfo.BlockEntities.TagAddress.Machines.Filter.FILTER_TAG, finalMethod.writeToNbt()));
                 },
-                Tooltip.create(Component.translatable(NDatabase.GUIInfo.Descriptions.getDescription(NDatabase.GUIInfo.Descriptions.Filter.BUTTON_MOD_OWNER))),
-                messageSupplier -> Component.translatable(NDatabase.GUIInfo.Descriptions.getDescription(NDatabase.GUIInfo.Descriptions.Filter.BUTTON_MOD_OWNER))));
+                NDatabase.GUIInfo.Descriptions.Filter.BUTTON_MOD_OWNER));
 
         this.addRenderableWidget(new FilterEnumButton<>(
                 getGuiLeft() + 152,
@@ -289,11 +226,58 @@ public class FluidTransmitterScreen extends NContainerScreen<FluidTransmitterCon
 
                     FilterMethod finalMethod = method;
                     button.setData(method.target());
+                    button.setTooltip(Tooltip.create(Component.translatable(NDatabase.GUIInfo.Descriptions.getDescription(NDatabase.GUIInfo.Descriptions.Filter.BUTTON_TARGET[button.getData().getValue().ordinal()]))));
+
                     sendTransmitterUpdate(tag -> tag.put(NDatabase.BlocksInfo.BlockEntities.TagAddress.Machines.Filter.FILTER_TAG, finalMethod.writeToNbt()));
                 },
-                Tooltip.create(Component.translatable(NDatabase.GUIInfo.Descriptions.getDescription(NDatabase.GUIInfo.Descriptions.Filter.BUTTON_TARGET))),
-                messageSupplier -> Component.translatable(NDatabase.GUIInfo.Descriptions.getDescription(NDatabase.GUIInfo.Descriptions.Filter.BUTTON_TARGET))));
+                NDatabase.GUIInfo.Descriptions.Filter.BUTTON_TARGET));
 
+    }
+
+    private @NotNull IconButton createIconButton(int x, int y, ResourceLocation guiTexture, int u, int v,
+                                                 Consumer<IconButton> onPress, String descriptionKey)
+    {
+        IconButton button = new IconButton(getGuiLeft() + x, getGuiTop() + y, 14, 14,
+                IconSet.of(guiTexture, 1, u, v, 32, 32),
+                btn -> onPress.accept((IconButton) btn),
+                Tooltip.create(Component.translatable(NDatabase.GUIInfo.Descriptions.getDescription(descriptionKey))),
+                messageSupplier -> Component.translatable(NDatabase.GUIInfo.Descriptions.getDescription(descriptionKey)));
+
+        this.addRenderableWidget(button);
+        return button;
+    }
+
+    private void decreaseTransferAmount(IconButton button)
+    {
+        adjustTransferAmount(button, -1);
+    }
+
+    private void increaseTransferAmount(IconButton button)
+    {
+        adjustTransferAmount(button, 1);
+    }
+
+    private void adjustTransferAmount(IconButton button, int direction)
+    {
+        FluidTransmitterBlockEntity blockEntity = getMenu().blockEntity;
+        int value = blockEntity.getTransferAmount();
+
+        if (hasShiftDown() && hasControlDown())
+            value += direction * 1000;
+        else if (hasShiftDown())
+            value += direction * 100;
+        else if (hasControlDown())
+            value += direction * 10;
+        else
+            value += direction;
+
+        value = Mth.clamp(value, FluidTransmitterBlockEntity.MIN_TRANSFER, FluidTransmitterBlockEntity.MAX_TRANSFER);
+
+        button.active = value != (direction == -1 ? FluidTransmitterBlockEntity.MIN_TRANSFER : FluidTransmitterBlockEntity.MAX_TRANSFER);
+        (direction == -1 ? buttonPlus : buttonMinus).active = true;
+
+        int finalValue = value;
+        sendTransmitterUpdate(tag -> tag.putInt(NDatabase.BlocksInfo.BlockEntities.TagAddress.Machines.FluidTransmitter.TRANSFER_AMOUNT, finalValue));
     }
 
     @Override

@@ -257,12 +257,39 @@ public class NDatabase
                 public static final String BUTTON_PLUS = BUTTON + "plus";
                 public static final String BUTTON_MINUS = BUTTON + "minus";
 
-                public static final String BUTTON_LIST_TYPE = BUTTON + "list_type";
-                public static final String BUTTON_ROUTE = BUTTON + "route";
-                public static final String BUTTON_NBT = BUTTON + "nbt";
-                public static final String BUTTON_TAG = BUTTON + "tag";
-                public static final String BUTTON_MOD_OWNER = BUTTON + "mod_owner";
-                public static final String BUTTON_TARGET = BUTTON + "target";
+                public static final String[] BUTTON_LIST_TYPE =
+                        {
+                            BUTTON + "list_type.allow",
+                            BUTTON + "list_type.deny"
+                        };
+                public static final String[] BUTTON_ROUTE =
+                        {
+                                BUTTON + "route.input",
+                                BUTTON + "route.output",
+                                BUTTON + "route.bidirection"
+                        };
+                public static final String[] BUTTON_NBT =
+                        {
+                                BUTTON + "nbt.check",
+                                BUTTON + "nbt.ignore"
+                        };
+                public static final String[] BUTTON_TAG =
+                        {
+                                BUTTON + "tag.use",
+                                BUTTON + "tag.ignore"
+                        };
+                public static final String[] BUTTON_MOD_OWNER =
+                        {
+                                BUTTON + "mod_owner.check",
+                                BUTTON + "mod_owner.ignore"
+                        };
+                public static final String[] BUTTON_TARGET =
+                        {
+                                BUTTON + "target.nearest",
+                                BUTTON + "target.furthers",
+                                BUTTON + "target.random",
+                                BUTTON + "target.round_robin"
+                        };
             }
 
             public static @NotNull String getDescription(String str)

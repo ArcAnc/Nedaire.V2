@@ -9,8 +9,10 @@
 
 package com.arcanc.nedaire.util.filter;
 
+import com.arcanc.nedaire.content.block.block_entity.FluidTransmitterBlockEntity;
 import com.arcanc.nedaire.util.NDatabase;
 import com.arcanc.nedaire.util.helpers.FluidHelper;
+import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
@@ -19,59 +21,43 @@ import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.FluidType;
 import net.neoforged.neoforge.items.IItemHandler;
 import net.neoforged.neoforge.registries.NeoForgeRegistries;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 public record FilterMethod(ListType list, Route route, NBT nbt, TagCheck tag, ModOwner owner, Target target)
 {
     public static final FilterMethod DEFAULT = new FilterMethod(ListType.DENY, Route.OUTPUT, NBT.IGNORE_NBT, TagCheck.IGNORE, ModOwner.IGNORE, Target.ROUND_ROBIN);
 
     private static final Function<IItemHandler, Set<FluidStack>> fluidSetGetter = iItemHandler ->
-    {
-        Set<FluidStack> set = new HashSet<>();
-        for (int q = 0; q < iItemHandler.getSlots(); q++)
-        {
-            ItemStack itemStack = iItemHandler.getStackInSlot(q);
-            FluidHelper.getFluidHandler(itemStack).
-                    ifPresent(fluidHandler ->
-                    {
-                        for (int z = 0; z < fluidHandler.getTanks(); z++)
-                        {
-                            FluidStack fluid = fluidHandler.getFluidInTank(z);
-                            if (!fluid.isEmpty())
-                                set.add(fluid);
-                        }
-                    });
-        }
-        return set;
-    };
+            IntStream.range(0, iItemHandler.getSlots()).
+                    mapToObj(iItemHandler::getStackInSlot).
+                    flatMap(itemStack -> FluidHelper.getFluidHandler(itemStack).
+                            map(fluidHandler -> IntStream.range(0, fluidHandler.getTanks()).
+                                    mapToObj(fluidHandler::getFluidInTank).
+                                    filter(fluid -> !fluid.isEmpty())
+                            ).
+                            orElse(Stream.empty())
+                    ).
+                    collect(Collectors.toSet());
 
     public enum ListType implements FilterType<ListType>
     {
         ALLOW((iItemHandler, stack) ->
         {
             Set<FluidStack> set = fluidSetGetter.apply(iItemHandler);
-            if (set.isEmpty())
-                return false;
-            for (FluidStack fluidStack : set)
-                if (FluidStack.isSameFluid(fluidStack, stack))
-                    return true;
-            return false;
+            return !set.isEmpty() && set.stream().anyMatch(fluidStack -> FluidStack.isSameFluid(fluidStack, stack));
         }),
         DENY((iItemHandler, stack) ->
         {
             Set<FluidStack> set = fluidSetGetter.apply(iItemHandler);
-            if (set.isEmpty())
-                return true;
-            for (FluidStack fluidStack : set)
-                if (FluidStack.isSameFluid(fluidStack, stack))
-                    return false;
-            return true;
+            return set.isEmpty() || set.stream().noneMatch(fluidStack -> FluidStack.isSameFluid(fluidStack, stack));
         });
 
         private final BiPredicate<IItemHandler, FluidStack> predicate;
@@ -136,15 +122,7 @@ public record FilterMethod(ListType list, Route route, NBT nbt, TagCheck tag, Mo
         CHECK_NBT (((iItemHandler, stack) ->
         {
             Set<FluidStack> set = fluidSetGetter.apply(iItemHandler);
-
-            if (set.isEmpty())
-                return true;
-            for (FluidStack fluidStack : set)
-            {
-                if (FluidStack.isSameFluidSameComponents(fluidStack, stack))
-                    return true;
-            }
-            return false;
+            return !set.isEmpty() && set.stream().anyMatch(fluidStack -> FluidStack.isSameFluidSameComponents(fluidStack, stack));
         })),
         IGNORE_NBT((iItemHandler, stack) -> true);
 
@@ -188,17 +166,18 @@ public record FilterMethod(ListType list, Route route, NBT nbt, TagCheck tag, Mo
         USE ((iItemHandler, stack) ->
         {
             Set<FluidStack> set = fluidSetGetter.apply(iItemHandler);
-            if (set.isEmpty())
-                return true;
-            Set<TagKey<FluidType>> tagKeySet = new HashSet<>();
-            for (FluidStack fluidStack : set)
-            {
-                NeoForgeRegistries.FLUID_TYPES.getHolder(NeoForgeRegistries.FLUID_TYPES.getKey(fluidStack.getFluidType())).
-                        ifPresent(fluidTypeReference -> tagKeySet.addAll(fluidTypeReference.tags().collect(Collectors.toSet())));
-            }
-            Set<TagKey<FluidType>> stackTags = new HashSet<>();
-            NeoForgeRegistries.FLUID_TYPES.getHolder(NeoForgeRegistries.FLUID_TYPES.getKey(stack.getFluidType())).
-                    ifPresent(fluidTypeReference -> stackTags.addAll(fluidTypeReference.tags().collect(Collectors.toSet())));
+            if (set.isEmpty()) return true;
+
+            Set<TagKey<FluidType>> tagKeySet = set.stream().
+                    flatMap(fluidStack -> NeoForgeRegistries.FLUID_TYPES.getHolder(NeoForgeRegistries.FLUID_TYPES.getKey(fluidStack.getFluidType())).
+                            map(fluidTypeReference -> fluidTypeReference.tags().collect(Collectors.toSet()).stream()).
+                            orElse(Stream.empty())
+                    ).
+                    collect(Collectors.toSet());
+
+            Set<TagKey<FluidType>> stackTags = NeoForgeRegistries.FLUID_TYPES.getHolder(NeoForgeRegistries.FLUID_TYPES.getKey(stack.getFluidType())).
+                    map(fluidTypeReference -> fluidTypeReference.tags().collect(Collectors.toSet())).
+                    orElse(Collections.emptySet());
 
             return tagKeySet.containsAll(stackTags);
         }),
@@ -249,13 +228,12 @@ public record FilterMethod(ListType list, Route route, NBT nbt, TagCheck tag, Mo
             Set<FluidStack> set = fluidSetGetter.apply(iItemHandler);
             if (set.isEmpty())
                 return false;
-            for (FluidStack fluidStack : set)
+
+            return set.stream().anyMatch(fluidStack ->
             {
                 ResourceLocation checkLoc = NeoForgeRegistries.FLUID_TYPES.getKey(fluidStack.getFluidType());
-                if (checkLoc != null && checkLoc.getNamespace().equals(stackLoc.getNamespace()))
-                    return true;
-            }
-            return false;
+                return checkLoc != null && checkLoc.getNamespace().equals(stackLoc.getNamespace());
+            });
         }),
         IGNORE ((handler, stack) -> true);
 
@@ -296,7 +274,46 @@ public record FilterMethod(ListType list, Route route, NBT nbt, TagCheck tag, Mo
     }
     public enum Target implements FilterType<Target>
     {
-        NEAREST_FIRST, FURTHERS_FIRST, RANDOM, ROUND_ROBIN;
+        NEAREST_FIRST(transmitter ->
+        {
+            List<BlockPos> sortedByDistance = getSortedPoses(transmitter.getAttachedPoses(), transmitter.getBlockPos(), true);
+            int index = transmitter.getPrevTargetIndex();
+            index = (++index) % sortedByDistance.size();
+            transmitter.setPrevTargetIndex(index);
+            return sortedByDistance.get(index);
+        }),
+        FURTHERS_FIRST(transmitter ->
+        {
+            List<BlockPos> sortedByDistance = getSortedPoses(transmitter.getAttachedPoses(), transmitter.getBlockPos(), false);
+            int index = transmitter.getPrevTargetIndex();
+            index = (++index) % sortedByDistance.size();
+            transmitter.setPrevTargetIndex(index);
+            return sortedByDistance.get(index);
+        }),
+        RANDOM (transmitter ->
+        {
+            List<BlockPos> attachedPoses = transmitter.getAttachedPoses();
+            return attachedPoses.get(transmitter.getLevel().random.nextInt(attachedPoses.size()));
+        }),
+        ROUND_ROBIN(transmitter ->
+        {
+            int index = transmitter.getPrevTargetIndex();
+            index = (++index) % transmitter.getAttachedPoses().size();
+            transmitter.setPrevTargetIndex(index);
+            return transmitter.getAttachedPoses().get(index);
+        });
+
+        private final Function<FluidTransmitterBlockEntity, BlockPos> function;
+
+        Target (Function<FluidTransmitterBlockEntity, BlockPos> function)
+        {
+            this.function = function;
+        }
+
+        public BlockPos getNextTargetPos(FluidTransmitterBlockEntity blockEntity)
+        {
+            return function.apply(blockEntity);
+        }
 
         @Override
         public Target getValue()
@@ -314,6 +331,15 @@ public record FilterMethod(ListType list, Route route, NBT nbt, TagCheck tag, Mo
         public Target[] possibleValues()
         {
             return Target.values();
+        }
+
+        private static List<BlockPos> getSortedPoses(@NotNull List<BlockPos> attachedPoses, @NotNull BlockPos tilePos, boolean nearestFirst)
+        {
+            return attachedPoses.stream().
+                    sorted(nearestFirst
+                            ? Comparator.comparingDouble(tilePos::distSqr)
+                            : Comparator.comparingDouble(tilePos::distSqr).reversed()).
+                    collect(Collectors.toList());
         }
     }
 

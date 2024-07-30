@@ -109,10 +109,7 @@ public class NSlot extends SlotItemHandler
         }
     }
 
-    /*FIXME: finish code. Init, set and colored background*/
-
     /**
-     *
      * @param active New state of slot
      * @return this, to allow chaining.
      */
@@ -133,10 +130,9 @@ public class NSlot extends SlotItemHandler
 
         public ItemHandlerGhost(@NotNull IItemHandler itemHandler, int panelIndex, int index, int xPosition, int yPosition, @NotNull Predicate<ItemStack> mayPlace)
         {
-            super(itemHandler, panelIndex, index, xPosition, yPosition);
-            Preconditions.checkNotNull(mayPlace);
-            this.mayPlace = mayPlace;
+            super(itemHandler, panelIndex, index, xPosition, yPosition, mayPlace);
         }
+
         public ItemHandlerGhost(@NotNull IItemHandler itemHandler, int panelIndex, int index, int xPosition, int yPosition)
         {
             this(itemHandler, panelIndex, index, xPosition, yPosition, $ -> true);

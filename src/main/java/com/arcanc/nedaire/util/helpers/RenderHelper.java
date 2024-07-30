@@ -9,7 +9,6 @@
 
 package com.arcanc.nedaire.util.helpers;
 
-import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
@@ -32,9 +31,11 @@ import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
+import net.neoforged.neoforge.client.model.pipeline.VertexConsumerWrapper;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
+import org.joml.Matrix4fStack;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -90,66 +91,56 @@ public class RenderHelper
         }
     }
 
-    public static void renderFakeItemTransparent(@NotNull ItemStack stack, int x, int y, float alpha)
+    public static void renderFakeItemTransparent(@NotNull GuiGraphics gui, @NotNull ItemStack stack, int x, int y, float alpha)
     {
-        renderFakeItemColored(stack, x, y, 1F, 1F, 1F, alpha);
+        renderFakeItemColored(gui, stack, x, y, 1.f, 1.f, 1.f, alpha);
     }
 
-    public static void renderFakeItemColored(@NotNull ItemStack stack, int x, int y, float red, float green, float blue, float alpha)
+    public static void renderFakeItemColored(@NotNull GuiGraphics gui, @NotNull ItemStack stack, int x, int y, float red, float green, float blue, float alpha)
     {
         if (stack.isEmpty())
             return;
 
         Minecraft mc = mc();
-        BakedModel model = renderItem().getModel(stack, null, mc.player, 0);
-        renderItemModel(stack, x, y, red, green, blue, alpha, model);
+        BakedModel model = renderItem().getModel(stack, mc().level, mc.player, 0);
+        renderItemModel(gui, stack, x, y, red, green, blue, alpha, model);
     }
 
     /**
-     * {@link ItemRenderer::renderGuiItem} but with color
+     * {@link GuiGraphics::renderItem} but with color
      */
-    public static void renderItemModel(@NotNull ItemStack stack, int x, int y, float red, float green, float blue, float alpha, @NotNull BakedModel model)
+    public static void renderItemModel(@NotNull GuiGraphics gui, @NotNull ItemStack stack, int x, int y, float red, float green, float blue, float alpha, @NotNull BakedModel model)
     {
-        mc().getTextureManager().getTexture(InventoryMenu.BLOCK_ATLAS).setFilter(false, false);
+        Matrix4fStack poseStack = RenderSystem.getModelViewStack();
+        poseStack.pushMatrix();
+        {
+            poseStack.translate(x + 8, y + 8, 100);
+            poseStack.scale(16.f, -16.f, 16.f);
+            RenderSystem.applyModelViewMatrix();
 
-        RenderSystem.setShaderTexture(0, InventoryMenu.BLOCK_ATLAS);
+            boolean flag = !model.usesBlockLight();
+            if (flag)
+                Lighting.setupForFlatItems();
 
-        RenderSystem.enableBlend();
-        RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+            RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
 
-        /*FIXME: проверить, подходит ли этот поз стак или найти другой*/
-        PoseStack modelViewStack = new PoseStack();//RenderSystem.getModelViewStack();
-        modelViewStack.pushPose();
-        modelViewStack.translate(x, y, 100.0F);
-        modelViewStack.translate(8.0D, 8.0D, 0.0D);
-        modelViewStack.scale(1.0F, -1.0F, 1.0F);
-        modelViewStack.scale(16.0F, 16.0F, 16.0F);
-        RenderSystem.applyModelViewMatrix();
+            MultiBufferSource.BufferSource buffer = mc().renderBuffers().bufferSource();
+            renderItem().render(stack,
+                    ItemDisplayContext.GUI,
+                    false,
+                    new PoseStack(),
+                    wrapBuffer(buffer, red, green, blue, alpha, alpha < 0.5f),
+                    LightTexture.FULL_BRIGHT,
+                    OverlayTexture.NO_OVERLAY,
+                    model);
 
-        boolean flatLight = !model.usesBlockLight();
-        if (flatLight)
-            Lighting.setupForFlatItems();
-
-        MultiBufferSource.BufferSource buffer = mc().renderBuffers().bufferSource();
-        renderItem().render(
-                stack,
-                ItemDisplayContext.GUI,
-                false,
-                new PoseStack(),
-                wrapBuffer(buffer, red, green, blue, alpha, alpha < 1F),
-                LightTexture.FULL_BRIGHT,
-                OverlayTexture.NO_OVERLAY,
-                model
-        );
-        buffer.endBatch();
-
-        RenderSystem.enableDepthTest();
-
-        if (flatLight)
-            Lighting.setupFor3DItems();
-
-        modelViewStack.popPose();
+            RenderSystem.disableDepthTest();
+            buffer.endBatch();
+            RenderSystem.enableDepthTest();
+            if (flag)
+                Lighting.setupFor3DItems();
+        }
+        poseStack.popMatrix();
         RenderSystem.applyModelViewMatrix();
     }
 
@@ -159,9 +150,8 @@ public class RenderHelper
         return renderType -> new TintedVertexConsumer(buffer.getBuffer(forceTranslucent ? TRANSLUCENT : renderType), red, green, blue, alpha);
     }
 
-    public static final class TintedVertexConsumer implements VertexConsumer
+    public static final class TintedVertexConsumer extends VertexConsumerWrapper
     {
-        private final VertexConsumer wrapped;
         private final float red;
         private final float green;
         private final float blue;
@@ -169,57 +159,22 @@ public class RenderHelper
 
         public TintedVertexConsumer(VertexConsumer wrapped, float red, float green, float blue, float alpha)
         {
-            this.wrapped = wrapped;
+            super(wrapped);
             this.red = red;
             this.green = green;
             this.blue = blue;
             this.alpha = alpha;
         }
 
-        public TintedVertexConsumer(VertexConsumer wrapped, int red, int green, int blue, int alpha)
-        {
-            this(wrapped, red / 255F, green / 255F, blue / 255F, alpha / 255F);
-        }
-
-        @Override
-        public @NotNull VertexConsumer addVertex(float x, float y, float z)
-        {
-            return wrapped.addVertex(x, y, z);
-        }
-
         @Override
         public @NotNull VertexConsumer setColor(int red, int green, int blue, int alpha)
         {
-            return wrapped.setColor(
-                    (int) (red * this.red),
-                    (int) (green * this.green),
-                    (int) (blue * this.blue),
-                    (int) (alpha * this.alpha)
+            return parent.setColor(
+                    (red * this.red) / 255f,
+                    (green * this.green) / 255f,
+                    (blue * this.blue) / 255f,
+                    (alpha * this.alpha) / 255f
             );
-        }
-
-        @Override
-        public @NotNull VertexConsumer setUv(float u, float v)
-        {
-            return wrapped.setUv(u, v);
-        }
-
-        @Override
-        public @NotNull VertexConsumer setUv1(int u, int v)
-        {
-            return wrapped.setUv1(u, v);
-        }
-
-        @Override
-        public @NotNull VertexConsumer setUv2(int u, int v)
-        {
-            return wrapped.setUv2(u, v);
-        }
-
-        @Override
-        public @NotNull VertexConsumer setNormal(float x, float y, float z)
-        {
-            return wrapped.setNormal(x, y, z);
         }
     }
 

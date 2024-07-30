@@ -28,19 +28,18 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.LongTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import net.neoforged.neoforge.network.PacketDistributor;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -85,123 +84,74 @@ public class FluidTransmitterBlockEntity extends RedstoneSensitiveBlockEntity im
     @Override
     public void tickServer()
     {
+        clearRemovedPoses();
+
         boolean isEnabled = false;
         if (isPowered())
         {
             isEnabled = true;
             if (canWork())
             {
-                BlockPos targetPos = BlockPos.ZERO;
-                BlockPos sourcePos = BlockPos.ZERO;
-                clearRemovedPoses();
-
                 if (!attachedPoses.isEmpty())
                 {
-                    switch (filterMethod.route())
+                    BlockPos sourcePos = getBlockPos().offset(getBlockState().getValue(BlockHelper.BlockProperties.FACING).getNormal());
+                    BlockPos targetPos = filterMethod.target().getNextTargetPos(this);
+
+                    if (filterMethod.route() == FilterMethod.Route.INPUT)
                     {
-                        case OUTPUT, BIDIRECTION ->
-                        {
-                            sourcePos = getBlockPos().offset(getBlockState().getValue(BlockHelper.BlockProperties.FACING).getNormal());
-                            targetPos = switch (filterMethod.target())
-                            {
-                                case NEAREST_FIRST ->
-                                {
-                                    List<BlockPos> sortedByDistance = getSortedClosestPoses();
-                                    prevTargetIndex++;
-                                    if (prevTargetIndex >= sortedByDistance.size())
-                                        prevTargetIndex = 0;
-                                    yield sortedByDistance.get(prevTargetIndex);
-                                }
-                                case FURTHERS_FIRST ->
-                                {
-                                    List<BlockPos> sortedByDistance = getSortedFurthersPoses();
-                                    prevTargetIndex++;
-                                    if (prevTargetIndex >= sortedByDistance.size())
-                                        prevTargetIndex = 0;
-                                    yield sortedByDistance.get(prevTargetIndex);
-                                }
-                                case RANDOM -> attachedPoses.get(getLevel().random.nextInt(attachedPoses.size()));
-                                case ROUND_ROBIN ->
-                                {
-                                    prevTargetIndex++;
-                                    if (prevTargetIndex >= attachedPoses.size())
-                                        prevTargetIndex = 0;
-                                    yield attachedPoses.get(prevTargetIndex);
-                                }
-                            };
-                        }
-                        case INPUT ->
-                        {
-                            targetPos = getBlockPos().offset(getBlockState().getValue(BlockHelper.BlockProperties.FACING).getNormal());
-                            sourcePos = switch (filterMethod.target())
-                            {
-                                case NEAREST_FIRST ->
-                                {
-                                    List<BlockPos> sortedByDistance = getSortedClosestPoses();
-                                    prevTargetIndex++;
-                                    if (prevTargetIndex >= sortedByDistance.size())
-                                        prevTargetIndex = 0;
-                                    yield sortedByDistance.get(prevTargetIndex);
-                                }
-                                case FURTHERS_FIRST ->
-                                {
-                                    List<BlockPos> sortedByDistance = getSortedFurthersPoses();
-                                    prevTargetIndex++;
-                                    if (prevTargetIndex >= sortedByDistance.size())
-                                        prevTargetIndex = 0;
-                                    yield sortedByDistance.get(prevTargetIndex);
-                                }
-                                case RANDOM -> attachedPoses.get(getLevel().random.nextInt(attachedPoses.size()));
-                                case ROUND_ROBIN ->
-                                {
-                                    prevTargetIndex++;
-                                    if (prevTargetIndex >= attachedPoses.size())
-                                        prevTargetIndex = 0;
-                                    yield attachedPoses.get(prevTargetIndex);
-                                }
-                            };
-                        }
+                        BlockPos tempPos = sourcePos;
+                        sourcePos = targetPos;
+                        targetPos = tempPos;
+                    }
+                    else if (filterMethod.route() == FilterMethod.Route.BIDIRECTION)
+                    {
+                        BlockPos targetAnother = getBlockPos().offset(getBlockState().getValue(BlockHelper.BlockProperties.FACING).getNormal());
+                        BlockPos sourceAnother = filterMethod.target().getNextTargetPos(this);
+                        handleFluidTransfer(sourceAnother, targetAnother, FilterMethod.Route.INPUT);
                     }
 
-                    if (targetPos != BlockPos.ZERO || sourcePos != BlockPos.ZERO)
-                    {
-                        if (FluidHelper.isFluidHandler(getLevel(), targetPos, null) && FluidHelper.isFluidHandler(getLevel(), sourcePos, null))
-                        {
-                            Optional<IFluidHandler> targetHandler = FluidHelper.getFluidHandler(getLevel(), targetPos);
-                            Optional<IFluidHandler> sourceHandler = FluidHelper.getFluidHandler(getLevel(), sourcePos);
-                            FluidStack transferStack = FluidStack.EMPTY;
-
-                            if (FluidHelper.hasEmptySpace(targetHandler) && !FluidHelper.isEmpty(sourceHandler))
-                            {
-                                transferStack = sourceHandler.map(fluidHandler ->
-                                {
-                                    for (int q = 0; q < fluidHandler.getTanks(); q++)
-                                    {
-                                        FluidStack stackForTransfer = fluidHandler.getFluidInTank(q);
-
-                                        if (filterMethod.list().test(handler, stackForTransfer) &&
-                                                filterMethod.owner().test(handler,stackForTransfer) &&
-                                                filterMethod.nbt().test(handler, stackForTransfer) &&
-                                                filterMethod.tag().test(handler, stackForTransfer))
-                                            return fluidHandler.drain(stackForTransfer.copyWithAmount(Math.min(stackForTransfer.getAmount(), transferAmount)), IFluidHandler.FluidAction.EXECUTE);
-                                    }
-                                    return FluidStack.EMPTY;
-                                }).orElse(FluidStack.EMPTY);
-                            }
-
-                            if (!transferStack.isEmpty())
-                            {
-                                List<Vec3> route = RenderHelper.getSpiralAroundVector(getBlockPos().getCenter().subtract(0, 0.25f, 0), targetPos.getCenter(), 0.15f, 70, 5);
-                                addFluidStackTransport(route, transferStack);
-                            }
-                        }
-                    }
+                    handleFluidTransfer(sourcePos, targetPos, filterMethod.route());
                 }
             }
         }
+
         if (getBlockState().getValue(BlockHelper.BlockProperties.ENABLED) != isEnabled)
-        {
             getLevel().setBlock(getBlockPos(), getBlockState().setValue(BlockHelper.BlockProperties.ENABLED, isEnabled), Block.UPDATE_CLIENTS);
+    }
+
+    private void handleFluidTransfer(BlockPos sourcePos, BlockPos targetPos, FilterMethod.Route routeType)
+    {
+        if (sourcePos != BlockPos.ZERO || targetPos != BlockPos.ZERO)
+        {
+            Optional<IFluidHandler> targetHandler = FluidHelper.getFluidHandler(getLevel(), targetPos);
+            Optional<IFluidHandler> sourceHandler = FluidHelper.getFluidHandler(getLevel(), sourcePos);
+            FluidStack transferStack = FluidStack.EMPTY;
+
+            if (FluidHelper.hasEmptySpace(targetHandler) && !FluidHelper.isEmpty(sourceHandler))
+            {
+                transferStack = sourceHandler.map(fluidHandler ->
+                {
+                    FluidStack stackForTransfer = fluidHandler.getFluidInTank(0);
+                    if (filterMethod.list().test(handler, stackForTransfer) &&
+                        filterMethod.owner().test(handler, stackForTransfer) &&
+                        filterMethod.nbt().test(handler, stackForTransfer) &&
+                        filterMethod.tag().test(handler, stackForTransfer))
+                    {
+                        FluidStack toExtract = fluidHandler.drain(stackForTransfer.copyWithAmount(Math.min(stackForTransfer.getAmount(), transferAmount)), IFluidHandler.FluidAction.EXECUTE);
+                        getLevel().getBlockEntity(sourcePos).setChanged();
+                        return toExtract;
+                    }
+                    return FluidStack.EMPTY;
+                }).orElse(FluidStack.EMPTY);
+            }
+
+            if (!transferStack.isEmpty())
+            {
+                List<Vec3> route = routeType == FilterMethod.Route.INPUT ?
+                        RenderHelper.getSpiralAroundVector(sourcePos.getCenter(), getBlockPos().getCenter().subtract(0, 0.25f, 0), 0.15f, 70, 5) :
+                        RenderHelper.getSpiralAroundVector(getBlockPos().getCenter().subtract(0, 0.25f, 0), targetPos.getCenter(), 0.15f, 70, 5);
+                addFluidStackTransport(route, transferStack);
+            }
         }
     }
 
@@ -263,32 +213,6 @@ public class FluidTransmitterBlockEntity extends RedstoneSensitiveBlockEntity im
         return InteractionResult.PASS;
     }
 
-    @Contract(pure = true)
-    private @NotNull List<BlockPos> getSortedClosestPoses()
-    {
-        List<BlockPos> list = new ArrayList<>(attachedPoses);
-        list.sort((pos1, pos2) ->
-        {
-            double dist1 = getBlockPos().distSqr(pos1);
-            double dist2 = getBlockPos().distSqr(pos2);
-            return Double.compare(dist1, dist2);
-        });
-        return list;
-    }
-
-    @Contract(pure = true)
-    private @NotNull List<BlockPos> getSortedFurthersPoses()
-    {
-        List<BlockPos> list = new ArrayList<>(attachedPoses);
-        list.sort((pos1, pos2) ->
-        {
-            double dist1 = getBlockPos().distSqr(pos1);
-            double dist2 = getBlockPos().distSqr(pos2);
-            return Double.compare(dist1, dist2) * -1;
-        });
-        return list;
-    }
-
     public int getTransferAmount()
     {
         return transferAmount;
@@ -314,7 +238,18 @@ public class FluidTransmitterBlockEntity extends RedstoneSensitiveBlockEntity im
         return attachedPoses;
     }
 
-    public @NotNull FilterMethod getFilterMethod() {
+    public int getPrevTargetIndex()
+    {
+        return prevTargetIndex;
+    }
+
+    public void setPrevTargetIndex(int prevTargetIndex)
+    {
+        this.prevTargetIndex = prevTargetIndex;
+    }
+
+    public @NotNull FilterMethod getFilterMethod()
+    {
         return filterMethod;
     }
 

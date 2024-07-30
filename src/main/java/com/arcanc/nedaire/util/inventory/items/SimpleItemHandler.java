@@ -131,7 +131,7 @@ public class SimpleItemHandler implements IItemHandler, INBTSerializable<Compoun
             {
                 CompoundTag itemTag = holder.serializeNBT(provider);
                 itemTag.putInt(NDatabase.CapabilitiesInfo.InventoryInfo.SLOT, q);
-                list.add(q, itemTag);
+                list.add(itemTag);
             }
         }
         CompoundTag fullTag = new CompoundTag();

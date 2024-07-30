@@ -10,6 +10,7 @@
 package com.arcanc.nedaire.content.gui.elements.buttons;
 
 import com.arcanc.nedaire.content.gui.elements.icon.EnumIconSet;
+import com.arcanc.nedaire.util.NDatabase;
 import com.arcanc.nedaire.util.filter.FilterType;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
@@ -26,13 +27,13 @@ public class FilterEnumButton<T extends Enum<T>> extends Button
     private final EnumIconSet iconSet;
     private final OnPress<T> onPress;
 
-    public FilterEnumButton(int x, int y, int width, int height, FilterType<T> data, EnumIconSet iconSet, OnPress<T> onPress, Tooltip tooltip, CreateNarration createNarration)
+    public FilterEnumButton(int x, int y, int width, int height, @NotNull FilterType<T> data, EnumIconSet iconSet, OnPress<T> onPress, String @NotNull [] tooltip)
     {
-        super(x, y, width, height, Component.empty(), button -> {}, createNarration);
-        setTooltip(tooltip);
+        super(x, y, width, height, Component.empty(), button -> {}, DEFAULT_NARRATION);
         this.iconSet = iconSet;
         this.data = data;
         this.onPress = onPress;
+        setTooltip(Tooltip.create(Component.translatable(NDatabase.GUIInfo.Descriptions.getDescription(tooltip[data.getValue().ordinal()]))));
     }
 
     @Override
