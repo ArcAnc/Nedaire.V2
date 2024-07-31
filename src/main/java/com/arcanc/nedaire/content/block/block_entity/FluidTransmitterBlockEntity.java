@@ -18,6 +18,7 @@ import com.arcanc.nedaire.util.NDatabase;
 import com.arcanc.nedaire.util.filter.FilterMethod;
 import com.arcanc.nedaire.util.handlers.FluidTransportHandler;
 import com.arcanc.nedaire.util.helpers.BlockHelper;
+import com.arcanc.nedaire.util.helpers.Codecs;
 import com.arcanc.nedaire.util.helpers.FluidHelper;
 import com.arcanc.nedaire.util.helpers.RenderHelper;
 import com.arcanc.nedaire.util.inventory.items.IInventoryCallback;
@@ -34,7 +35,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.fluids.FluidStack;
@@ -44,6 +44,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.stream.Stream;
 
 public class FluidTransmitterBlockEntity extends RedstoneSensitiveBlockEntity implements BlockInterfaces.INWrencheable, NServerTickableBE, BlockInterfaces.INInteractionObject<FluidTransmitterBlockEntity>
 {
@@ -157,7 +158,8 @@ public class FluidTransmitterBlockEntity extends RedstoneSensitiveBlockEntity im
 
     private void addFluidStackTransport(List<Vec3> route, FluidStack transferStack)
     {
-        FluidTransportHandler.Transport tsr = new FluidTransportHandler.Transport(this.level, route.getFirst(), route, transferStack);
+        FluidTransportHandler.Transport tsr = new FluidTransportHandler.Transport(this.level, Stream.of(route.getFirst()).
+                collect(Codecs.linkedListCollector()), route, transferStack);
 
         FluidTransportHandler.getTransportData(false).putIfAbsent(tsr.getId(), tsr);
         PacketDistributor.sendToAllPlayers(new S2CCreateFluidTransportPacket(tsr));

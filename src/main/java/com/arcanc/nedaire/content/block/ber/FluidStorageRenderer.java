@@ -60,9 +60,7 @@ public class FluidStorageRenderer implements BlockEntityRenderer<FluidStorageBlo
         SimpleFluidHandler handler = blockEntity.getHandler(null);
         FluidStack stack = handler.getFluidInTank(0);
         if (!stack.isEmpty())
-        {
             renderContent(stack, (float) stack.getAmount() / handler.getTankCapacity(0), poseStack, bufferSource, packedLight, packedOverlay);
-        }
     }
 
     private void renderContent(@NotNull FluidStack stack, float height, @NotNull PoseStack pose, @NotNull MultiBufferSource buffer, int combinedLight, int combinedOverlay)

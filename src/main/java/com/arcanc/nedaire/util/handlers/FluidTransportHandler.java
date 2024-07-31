@@ -10,12 +10,10 @@
 package com.arcanc.nedaire.util.handlers;
 
 import com.arcanc.nedaire.content.block.block_entity.FluidTransmitterBlockEntity;
+import com.arcanc.nedaire.content.nerwork.messages.NetworkEngine;
 import com.arcanc.nedaire.content.nerwork.messages.packets.S2CCreateFluidTransportPacket;
 import com.arcanc.nedaire.util.NDatabase;
-import com.arcanc.nedaire.util.helpers.BlockHelper;
-import com.arcanc.nedaire.util.helpers.Codecs;
-import com.arcanc.nedaire.util.helpers.FluidHelper;
-import com.arcanc.nedaire.util.helpers.RenderHelper;
+import com.arcanc.nedaire.util.helpers.*;
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
@@ -24,25 +22,35 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.Direction;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import net.neoforged.neoforge.client.extensions.common.IClientFluidTypeExtensions;
+import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
+import net.neoforged.neoforge.event.level.LevelEvent;
 import net.neoforged.neoforge.event.tick.LevelTickEvent;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
-import net.neoforged.neoforge.network.PacketDistributor;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.opengl.GL11;
 
 import java.util.*;
+import java.util.stream.Stream;
 
 public class FluidTransportHandler
 {
@@ -61,12 +69,49 @@ public class FluidTransportHandler
         return isClient ? CLIENT_INSTANCE : SERVER_INSTANCE;
     }
 
+    public static void loadLevel(final LevelEvent.@NotNull Load event)
+    {
+        LevelAccessor levelAccessor = event.getLevel();
+        if (levelAccessor.isClientSide())
+            return;
+
+        ServerLevel level = (ServerLevel) levelAccessor;
+        Object2ObjectLinkedOpenHashMap<UUID, Transport> transportData = getTransportData(false);
+        if (level.dimension().equals(Level.OVERWORLD))
+        {
+            transportData.clear();
+            transportData.trim();
+        }
+        FluidTransportSavedData data = FluidTransportSavedData.getInstance(level);
+        data.getSavedInfo().forEach(transportData::putIfAbsent);
+    }
+
+    public static void unloadLevel(final LevelEvent.@NotNull Unload event)
+    {
+        if (event.getLevel().isClientSide())
+        {
+            Object2ObjectLinkedOpenHashMap<UUID, Transport> transportData = getTransportData(true);
+            transportData.clear();
+            transportData.trim();
+        }
+    }
+
+    public static void playerLoad (final @NotNull EntityJoinLevelEvent event)
+    {
+        Level level = event.getLevel();
+        if (!level.isClientSide())
+        {
+            Object2ObjectLinkedOpenHashMap<UUID, Transport> transportData = getTransportData(false);
+            transportData.forEach((uuid, transport) -> NetworkEngine.sendToAllClients(new S2CCreateFluidTransportPacket(transport)));
+        }
+    }
+
     public static void levelTickEvent(final LevelTickEvent.@NotNull Pre event)
     {
         FluidTransportHandler handler = FluidTransportHandler.get(event.getLevel().isClientSide());
         if (event.hasTime())
         {
-            handler.TRANSPORT_DATA.values().forEach(Transport :: tick);
+            handler.TRANSPORT_DATA.values().forEach(transport -> transport.tick(event.getLevel()));
 
             for (UUID id : handler.TO_REMOVE)
             {
@@ -89,19 +134,6 @@ public class FluidTransportHandler
 
     private static void renderTransport(final @NotNull RenderLevelStageEvent event, @NotNull Vec3 cameraPos, @NotNull Transport trn)
     {
-        float t = 1f / RenderHelper.mc().getFps();
-        for (int q = 0; q < trn.position.size(); q++)
-        {
-            int index = q + trn.lastRoutePoint;
-            if (trn.route.size() - 1 < index)
-                break;
-            Vec3 start = trn.position.get(q);
-            Vec3 finish =  trn.route.get(index + 1);
-            trn.position.set(q, start.lerp(finish, t));
-        }
-        trn.step++;
-
-
         List<List<Vec3>> renderMesh = RenderHelper.getCirclesAroundPoints(trn.getPosition(), 0.025f, 8, true);
 
         TextureAtlasSprite sprite = RenderHelper.getTexture(ESSENTIA_TEXTURE);
@@ -180,13 +212,18 @@ public class FluidTransportHandler
         public static final StreamCodec<RegistryFriendlyByteBuf, Transport> STREAM_CODEC = StreamCodec.composite(
                 Codecs.UUID_STREAM_CODEC,
                 Transport :: getId,
-                Codecs.VEC_3_STREAM_CODEC,
-                transport -> transport.getPosition().getLast(),
+                ByteBufCodecs.<RegistryFriendlyByteBuf, Vec3>list().
+                        apply(Codecs.VEC_3_STREAM_CODEC),
+                Transport::getPosition,
                 ByteBufCodecs.<RegistryFriendlyByteBuf, Vec3>list().
                         apply(Codecs.VEC_3_STREAM_CODEC),
                 Transport :: getRoute,
                 FluidStack.OPTIONAL_STREAM_CODEC,
                 Transport :: getStack,
+                ByteBufCodecs.INT,
+                Transport :: getStep,
+                ByteBufCodecs.INT,
+                Transport :: getLastRoutePoint,
                 Transport :: new
         );
 
@@ -202,31 +239,59 @@ public class FluidTransportHandler
         /**
         * For Client Use Only
         */
-        public Transport(UUID id, Vec3 position, List<Vec3> route, FluidStack stack)
+        public Transport(UUID id, List<Vec3> position, List<Vec3> route, FluidStack stack, int step, int lastRoutePoint)
         {
             this.id = id;
             this.level = RenderHelper.mc().level;
-            this.position = new LinkedList<>();
-            this.position.add(position);
+            this.position = position;
             this.route = route;
             this.stack = stack;
+            this.step = step;
+            this.lastRoutePoint = lastRoutePoint;
         }
 
         /**
          *  For Server Use Only
          */
-        public Transport(Level level, Vec3 position, List<Vec3> route, FluidStack stack)
+        public Transport(Level level, List<Vec3> position, List<Vec3> route, FluidStack stack)
         {
             this.id = UUID.randomUUID();
             this.level = level;
-            this.position = new LinkedList<>();
-            this.position.add(position);
+            this.position = position;
             this.route = route;
             this.stack = stack;
         }
 
-        public void tick()
+        private Transport (@NotNull Level level, @NotNull CompoundTag tag)
         {
+            this.id = tag.getUUID(NDatabase.BlocksInfo.BlockEntities.TagAddress.Machines.FluidTransmitter.FluidTransport.ID);
+            this.level = level;
+            this.step = tag.getInt(NDatabase.BlocksInfo.BlockEntities.TagAddress.Machines.FluidTransmitter.FluidTransport.STEP);
+            this.lastRoutePoint = tag.getInt(NDatabase.BlocksInfo.BlockEntities.TagAddress.Machines.FluidTransmitter.FluidTransport.LAST_ROUTE_POINT);
+            this.stack = FluidStack.OPTIONAL_CODEC.parse(NbtOps.INSTANCE, tag.get(NDatabase.BlocksInfo.BlockEntities.TagAddress.Machines.FluidTransmitter.FluidTransport.FLUID)).
+                    result().
+                    orElse(FluidStack.EMPTY);
+            this.position = new LinkedList<>();
+            ListTag pos = tag.getList(NDatabase.BlocksInfo.BlockEntities.TagAddress.Machines.FluidTransmitter.FluidTransport.POSITIONS, Tag.TAG_COMPOUND);
+            pos.forEach(pt ->
+            {
+                if (pt instanceof CompoundTag posTag)
+                    this.position.add(TagHelper.readVec3(posTag));
+            });
+
+            this.route = new LinkedList<>();
+            ListTag routeList = tag.getList(NDatabase.BlocksInfo.BlockEntities.TagAddress.Machines.FluidTransmitter.FluidTransport.ROUTE, Tag.TAG_COMPOUND);
+            routeList.forEach(rt ->
+            {
+                if (rt instanceof CompoundTag routeTag)
+                    this.route.add(TagHelper.readVec3(routeTag));
+            });
+        }
+
+        public void tick(@NotNull Level ticker)
+        {
+            if (!level.dimension().equals(ticker.dimension()))
+                return;
             FluidTransportHandler transportHandler = get(level.isClientSide());
             if (lastRoutePoint >= route.size() - 1)
             {
@@ -256,7 +321,6 @@ public class FluidTransportHandler
                 return;
             }
 
-
             int stepsPerTick = 20;
             float t = 1f / stepsPerTick;
 
@@ -270,49 +334,58 @@ public class FluidTransportHandler
                    position.removeLast();
             }
 
-            if (!level.isClientSide())
+            for (int q = 0; q < position.size(); q++)
             {
-                for (int q = 0; q < position.size(); q++)
-                {
-                    int index = q + lastRoutePoint;
-                    if (route.size() - 1 < index)
-                        break;
-                    Vec3 start = position.get(q);
-                    Vec3 finish = route.get(index + 1);
-                    position.set(q, start.lerp(finish, t));
-                }
-                step++;
+                int index = q + lastRoutePoint;
+                if (route.size() - 2 < index)
+                    break;
+                Vec3 start = position.get(q);
+                Vec3 finish = route.get(index + 1);
+                position.set(q, start.lerp(finish, t));
             }
+            step++;
         }
 
         private void createReturnedTransport(List<Vec3> route, FluidStack fluidStack)
         {
-            FluidTransportHandler.Transport tsr = new FluidTransportHandler.Transport(this.level, route.getFirst(), route, fluidStack);
+            FluidTransportHandler.Transport tsr = new FluidTransportHandler.Transport(this.level, Stream.of(route.getFirst()).
+                    collect(Codecs.linkedListCollector()), route, fluidStack);
 
             FluidTransportHandler.getTransportData(false).putIfAbsent(tsr.getId(), tsr);
-            PacketDistributor.sendToAllPlayers(new S2CCreateFluidTransportPacket(tsr));
+            NetworkEngine.sendToAllClients(new S2CCreateFluidTransportPacket(tsr));
         }
 
         public CompoundTag saveTransport()
         {
             CompoundTag tag = new CompoundTag();
 
+            tag.putUUID(NDatabase.BlocksInfo.BlockEntities.TagAddress.Machines.FluidTransmitter.FluidTransport.ID, id);
+            tag.putInt(NDatabase.BlocksInfo.BlockEntities.TagAddress.Machines.FluidTransmitter.FluidTransport.STEP, step);
+            tag.putInt(NDatabase.BlocksInfo.BlockEntities.TagAddress.Machines.FluidTransmitter.FluidTransport.LAST_ROUTE_POINT, lastRoutePoint);
+            ListTag routeList = new ListTag();
+            for (Vec3 rt : route)
+            {
+                routeList.add(TagHelper.writeVec3(rt));
+            }
+            tag.put(NDatabase.BlocksInfo.BlockEntities.TagAddress.Machines.FluidTransmitter.FluidTransport.ROUTE, routeList);
+
+            ListTag posList = new ListTag();
+            for (Vec3 pos : position)
+            {
+                posList.add(TagHelper.writeVec3(pos));
+            }
+            tag.put(NDatabase.BlocksInfo.BlockEntities.TagAddress.Machines.FluidTransmitter.FluidTransport.POSITIONS, posList);
+            Level.RESOURCE_KEY_CODEC.encodeStart(NbtOps.INSTANCE, level.dimension()).
+                    ifSuccess(savedTag -> tag.put(NDatabase.BlocksInfo.BlockEntities.TagAddress.Machines.FluidTransmitter.FluidTransport.LEVEL, savedTag));
+
+            FluidStack.OPTIONAL_CODEC.encodeStart(NbtOps.INSTANCE, stack).
+                    ifSuccess(savedTag -> tag.put(NDatabase.BlocksInfo.BlockEntities.TagAddress.Machines.FluidTransmitter.FluidTransport.FLUID, savedTag));
             return tag;
         }
 
-        public void readCompound(CompoundTag tag)
+        public static @NotNull Transport readCompound(Level level, CompoundTag tag)
         {
-
-        }
-
-        public void sendSyncPacket()
-        {
-
-        }
-
-        public void receiveSyncPacket()
-        {
-
+            return new Transport(level, tag);
         }
 
         public FluidStack getStack()
@@ -333,6 +406,83 @@ public class FluidTransportHandler
         public List<Vec3> getRoute()
         {
             return route;
+        }
+
+        public int getStep()
+        {
+            return step;
+        }
+
+        public int getLastRoutePoint()
+        {
+            return lastRoutePoint;
+        }
+    }
+
+    public static class FluidTransportSavedData extends SavedData
+    {
+        private static final String FILE_NAME = NDatabase.BlocksInfo.BlockEntities.TagAddress.Machines.FluidTransmitter.FluidTransport.FLUID_TRANSPORT;
+
+        private final ServerLevel level;
+        private final Object2ObjectLinkedOpenHashMap<UUID, Transport> savedInfo = new Object2ObjectLinkedOpenHashMap<>();
+
+        public FluidTransportSavedData(ServerLevel level)
+        {
+            this.level = level;
+            setDirty();
+        }
+
+        public static @NotNull FluidTransportSavedData getInstance(@NotNull ServerLevel level)
+        {
+            return level.getDataStorage().computeIfAbsent(new Factory<>(
+                            () -> new FluidTransportSavedData(level),
+                            (tag, provider) -> FluidTransportSavedData.load(level, tag)),
+                    FILE_NAME);
+        }
+
+        public Object2ObjectLinkedOpenHashMap<UUID, Transport> getSavedInfo()
+        {
+            return savedInfo;
+        }
+
+        @Override
+        public @NotNull CompoundTag save(@NotNull CompoundTag tag, HolderLookup.@NotNull Provider registries)
+        {
+            ListTag listTag = new ListTag();
+            FluidTransportHandler.get(false).TRANSPORT_DATA.values().
+                    forEach(transport ->
+                    {
+                        if (level.dimension().equals(transport.level.dimension()))
+                            listTag.add(transport.saveTransport());
+                    });
+
+            tag.put(NDatabase.BlocksInfo.BlockEntities.TagAddress.Machines.FluidTransmitter.FluidTransport.FLUID_TRANSPORT, listTag);
+            return tag;
+        }
+
+        public static @NotNull FluidTransportSavedData load(@NotNull ServerLevel level, @NotNull CompoundTag tag)
+        {
+            FluidTransportSavedData data = new FluidTransportSavedData(level);
+
+            ListTag tags = tag.getList(NDatabase.BlocksInfo.BlockEntities.TagAddress.Machines.FluidTransmitter.FluidTransport.FLUID_TRANSPORT, Tag.TAG_COMPOUND);
+            tags.forEach(dynTag ->
+            {
+                if (dynTag instanceof CompoundTag compoundTag)
+                {
+                    ResourceKey<Level> resourceKey = Level.RESOURCE_KEY_CODEC.parse(NbtOps.INSTANCE, compoundTag.get(NDatabase.BlocksInfo.BlockEntities.TagAddress.Machines.FluidTransmitter.FluidTransport.LEVEL)).
+                            result().
+                            orElse(null);
+
+                    if (level.dimension().equals(resourceKey))
+                    {
+                        Transport trn = Transport.readCompound(level, compoundTag);
+                        data.savedInfo.putIfAbsent(trn.getId(), trn);
+                    }
+                }
+            });
+
+            data.setDirty();
+            return data;
         }
     }
 }

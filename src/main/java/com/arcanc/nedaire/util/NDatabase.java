@@ -77,6 +77,18 @@ public class NDatabase
                         public static final String POS_LIST = "pos_list";
                         public static final String PREV_TARGET_INDEX = "prev_target_index";
                         public static final String TRANSFER_AMOUNT = "transfer_amount";
+                        public static final class FluidTransport
+                        {
+                            public static final String FLUID_TRANSPORT = "fluid_transport";
+
+                            public static final String ID = "uuid";
+                            public static final String POSITIONS = "positions";
+                            public static final String ROUTE = "route";
+                            public static final String LAST_ROUTE_POINT = "last_route_point";
+                            public static final String STEP = "step";
+                            public static final String FLUID = "fluid";
+                            public static final String LEVEL = "level";
+                        }
                     }
                 }
             }

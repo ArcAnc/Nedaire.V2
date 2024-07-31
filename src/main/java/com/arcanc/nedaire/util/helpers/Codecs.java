@@ -13,11 +13,25 @@ import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.NotNull;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collector;
 
 public class Codecs
 {
+    public static <T> @NotNull Collector<T, ?, LinkedList<T>> linkedListCollector ()
+    {
+        return Collector.of(LinkedList::new, List::add,
+                (left, right) ->
+                {
+                    left.addAll(right);
+                    return left;
+                });
+    }
+
     public static final StreamCodec<RegistryFriendlyByteBuf, Vec3> VEC_3_STREAM_CODEC = StreamCodec.of(
             (buffer, vec3) ->
                 {
