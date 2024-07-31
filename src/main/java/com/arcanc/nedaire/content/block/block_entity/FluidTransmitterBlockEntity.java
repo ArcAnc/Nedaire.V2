@@ -49,7 +49,7 @@ import java.util.stream.Stream;
 public class FluidTransmitterBlockEntity extends RedstoneSensitiveBlockEntity implements BlockInterfaces.INWrencheable, NServerTickableBE, BlockInterfaces.INInteractionObject<FluidTransmitterBlockEntity>
 {
 
-    private final int WORK_MODIFIER = 20;
+    private final int WORK_MODIFIER = (FluidTransportHandler.POINTS_PER_ESSENCE + 1) * 20;
     private final List<BlockPos> attachedPoses = new ArrayList<>();
     private final int CONNECT_DISTANCE = 16;
     private FilterMethod filterMethod;

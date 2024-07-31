@@ -54,6 +54,7 @@ public class CommonEvents
         NeoForge.EVENT_BUS.addListener(FluidTransportHandler :: levelTickEvent);
         NeoForge.EVENT_BUS.addListener(FluidTransportHandler :: loadLevel);
         NeoForge.EVENT_BUS.addListener(FluidTransportHandler :: unloadLevel);
+        NeoForge.EVENT_BUS.addListener(FluidTransportHandler :: saveLevel);
         NeoForge.EVENT_BUS.addListener(FluidTransportHandler :: playerLoad);
     }
 

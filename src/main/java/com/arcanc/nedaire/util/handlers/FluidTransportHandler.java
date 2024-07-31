@@ -59,7 +59,7 @@ public class FluidTransportHandler
 
     private final Object2ObjectLinkedOpenHashMap<UUID, Transport> TRANSPORT_DATA = new Object2ObjectLinkedOpenHashMap<>();
     private final Set<UUID> TO_REMOVE = new LinkedHashSet<>();
-    private static final int POINTS_PER_ESSENCE = 7;
+    public static final int POINTS_PER_ESSENCE = 5;
     public static final ResourceLocation ESSENTIA_TEXTURE = NDatabase.modRL("essentia");
 
     private FluidTransportHandler() {}
@@ -94,6 +94,15 @@ public class FluidTransportHandler
             transportData.clear();
             transportData.trim();
         }
+    }
+
+    public static void saveLevel(final LevelEvent.@NotNull Save event)
+    {
+        LevelAccessor levelAccessor = event.getLevel();
+        ServerLevel level = (ServerLevel) levelAccessor;
+
+        FluidTransportSavedData.getInstance(level).setDirty();
+
     }
 
     public static void playerLoad (final @NotNull EntityJoinLevelEvent event)
